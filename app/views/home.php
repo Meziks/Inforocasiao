@@ -2,8 +2,8 @@
     <div class="container hero-inner">
         <div class="hero-text">
             <p class="eyebrow">Informática · Telemóveis · Reparações</p>
-            <h1>Tecnologia ao melhor preço, com <span>garantia de confiança</span>.</h1>
-            <p class="lead">Na Inforocasião encontra computadores, telemóveis e componentes electrónicos — novos e recondicionados — e um serviço de reparações rápido e honesto.</p>
+            <h1>Aparelhos eletrónicos novos e <span>recondicionados</span>.</h1>
+            <p class="lead">Na infor ocasião encontra computadores, telemóveis e componentes — e um serviço de reparação eletrónica com garantia de qualidade.</p>
             <div class="hero-actions">
                 <a href="<?= e(url('/produtos')) ?>" class="btn btn-primary">Ver produtos</a>
                 <a href="<?= e(url('/servicos')) ?>" class="btn btn-outline">Preciso de reparar</a>

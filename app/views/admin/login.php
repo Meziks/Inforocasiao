@@ -1,6 +1,6 @@
 <section class="auth-wrap">
     <div class="auth-card">
-        <div class="auth-brand"><span class="brand-mark">IO</span></div>
+        <div class="auth-brand"><img src="<?= e(url('assets/img/logo.png')) ?>" alt="<?= e($GLOBALS['config']['app']['name'] ?? 'Inforocasião') ?>" style="height:46px;width:auto"></div>
         <h1>Gestão da loja</h1>
         <p class="muted">Introduza as suas credenciais para continuar.</p>
 

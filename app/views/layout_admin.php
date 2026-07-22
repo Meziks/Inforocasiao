@@ -13,8 +13,8 @@
 <header class="admin-header">
     <div class="container header-inner">
         <a href="<?= e(url('/admin/dashboard')) ?>" class="brand">
-            <span class="brand-mark">IO</span>
-            <span class="brand-text">Gestão · <?= e($appName) ?></span>
+            <img src="<?= e(url('assets/img/logo.png')) ?>" alt="<?= e($appName) ?>" class="brand-logo">
+            <span class="brand-text">Gestão</span>
         </a>
         <nav class="main-nav">
             <a href="<?= e(url('/')) ?>" target="_blank">Ver site ↗</a>

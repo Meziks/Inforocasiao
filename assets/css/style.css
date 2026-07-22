@@ -2,16 +2,16 @@
    Inforocasião — folha de estilos principal
    ============================================================ */
 :root {
-    --bg: #0f1220;
+    --bg: #14161f;
     --surface: #ffffff;
     --ink: #1a1d2b;
     --ink-soft: #5b6072;
     --muted: #8a8fa3;
     --line: #e6e8ef;
-    --brand: #2563eb;
-    --brand-dark: #1e40af;
-    --brand-soft: #eff4ff;
-    --accent: #f59e0b;
+    --brand: #e2001a;
+    --brand-dark: #b00016;
+    --brand-soft: #fdeaec;
+    --accent: #111318;
     --ok: #16a34a;
     --danger: #dc2626;
     --radius: 14px;
@@ -67,26 +67,35 @@ h1, h2, h3, h4 { line-height: 1.2; margin: 0 0 .5em; }
 .header-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
 .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; color: var(--ink); font-size: 1.1rem; }
 .brand:hover { text-decoration: none; }
+.brand-logo { height: 42px; width: auto; display: block; }
 .brand-mark {
     width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
-    background: linear-gradient(135deg, var(--brand), #4f8cff); color: #fff; font-weight: 800; font-size: .95rem;
+    background: linear-gradient(135deg, var(--brand), #ff5563); color: #fff; font-weight: 800; font-size: .95rem;
 }
 .main-nav { display: flex; align-items: center; gap: 22px; }
 .main-nav a { color: var(--ink-soft); font-weight: 600; font-size: .95rem; }
 .main-nav a:hover { color: var(--brand); text-decoration: none; }
 
 /* ---------- Hero ---------- */
-.hero { background: radial-gradient(1200px 400px at 80% -10%, #1e3a8a 0%, var(--bg) 55%); color: #fff; padding: 72px 0; }
-.hero-inner { display: grid; grid-template-columns: 1.3fr .9fr; gap: 48px; align-items: center; }
+.hero { position: relative; background: radial-gradient(1100px 380px at 82% -20%, #e2001a 0%, #14161f 52%); color: #fff; padding: 72px 0; overflow: hidden; }
+/* Faixa axadrezada (motivo do logótipo) no rodapé do hero */
+.hero::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 10px;
+    background-image:
+        linear-gradient(45deg, rgba(255,255,255,.9) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.9) 75%),
+        linear-gradient(45deg, rgba(255,255,255,.9) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.9) 75%);
+    background-size: 20px 20px; background-position: 0 0, 10px 10px; background-color: #111318; opacity: .9;
+}
+.hero-inner { position: relative; z-index: 1; display: grid; grid-template-columns: 1.3fr .9fr; gap: 48px; align-items: center; }
 .hero-text h1 { font-size: 2.7rem; letter-spacing: -.02em; }
-.hero-text h1 span { color: #93c5fd; }
-.hero .lead { font-size: 1.12rem; color: #c7cbe0; max-width: 42ch; }
+.hero-text h1 span { color: #ff5563; }
+.hero .lead { font-size: 1.12rem; color: #d7d9e4; max-width: 44ch; }
 .hero-actions { display: flex; gap: 12px; margin-top: 26px; flex-wrap: wrap; }
-.hero-card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: var(--radius); padding: 26px; backdrop-filter: blur(6px); }
+.hero-card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: var(--radius); padding: 26px; backdrop-filter: blur(6px); }
 .hero-highlights { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
-.hero-highlights li { display: flex; flex-direction: column; padding-left: 16px; border-left: 3px solid var(--accent); }
+.hero-highlights li { display: flex; flex-direction: column; padding-left: 16px; border-left: 3px solid var(--brand); }
 .hero-highlights strong { font-size: 1.05rem; }
-.hero-highlights span { color: #aab0cc; font-size: .9rem; }
+.hero-highlights span { color: #b8bccd; font-size: .9rem; }
 
 /* ---------- Secções / grelhas ---------- */
 .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; }
@@ -157,6 +166,7 @@ h1, h2, h3, h4 { line-height: 1.2; margin: 0 0 .5em; }
 .service-ico { font-size: 2rem; display: block; margin-bottom: 12px; }
 .contact-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px; }
 .contact-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 26px; }
+.map-wrap { margin-top: 20px; line-height: 0; }
 
 /* ---------- Rodapé ---------- */
 .site-footer { background: var(--bg); color: #c7cbe0; margin-top: 40px; }

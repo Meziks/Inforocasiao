@@ -13,8 +13,7 @@
 <header class="site-header">
     <div class="container header-inner">
         <a href="<?= e(url('/')) ?>" class="brand">
-            <span class="brand-mark">IO</span>
-            <span class="brand-text"><?= e($appName) ?></span>
+            <img src="<?= e(url('assets/img/logo.png')) ?>" alt="<?= e($appName) ?>" class="brand-logo">
         </a>
         <nav class="main-nav">
             <a href="<?= e(url('/')) ?>">Início</a>
@@ -36,16 +35,19 @@
     <div class="container footer-grid">
         <div>
             <h4><?= e($appName) ?></h4>
-            <p>Computadores, telemóveis e componentes electrónicos. Novos e recondicionados. Assistência técnica e reparações.</p>
+            <p>Aparelhos eletrónicos novos e recondicionados. Serviços de reparação eletrónica com garantia de qualidade.</p>
+        </div>
+        <div>
+            <h4>Contactos</h4>
+            <p>Rua do Clube Desportivo de Cucujães, 275<br>3720-385 Cucujães</p>
+            <a href="tel:+351912138094">912 138 094</a>
+            <a href="tel:+351256842306">256 842 306</a>
         </div>
         <div>
             <h4>Navegação</h4>
             <a href="<?= e(url('/produtos')) ?>">Produtos</a>
             <a href="<?= e(url('/servicos')) ?>">Reparações</a>
             <a href="<?= e(url('/contactos')) ?>">Contactos</a>
-        </div>
-        <div>
-            <h4>Área reservada</h4>
             <a href="<?= e(url('/admin')) ?>">Gestão da loja</a>
         </div>
     </div>
