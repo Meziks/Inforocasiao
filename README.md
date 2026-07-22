@@ -119,7 +119,8 @@ migrations). Se não houver nada novo, não faz nada.
 Antes de ativar, abra `bin/auto-pull.sh` e confirme as duas variáveis no topo:
 
 - `REPO`   → a pasta do clone (a que indicou no *Repository Path* do cPanel)
-- `BRANCH` → o ramo a publicar (ex.: `main` depois de fazer o merge)
+- `BRANCH` → o ramo a publicar (já vem preenchido com o ramo de trabalho,
+  para que cada atualização fique online automaticamente)
 
 A partir daí, o fluxo passa a ser simplesmente: **`git push` → o site atualiza
 sozinho** em poucos minutos. O registo de cada deploy fica em `~/deploy.log`.

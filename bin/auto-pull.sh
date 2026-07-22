@@ -16,9 +16,9 @@ set -euo pipefail
 # Pasta do clone criado pelo cPanel (Git Version Control → Repository Path)
 REPO="${REPO:-$HOME/repositories/inforocasiao}"
 
-# Ramo (branch) a publicar. Depois de fazer merge para o ramo principal,
-# normalmente será "main".
-BRANCH="${BRANCH:-main}"
+# Ramo (branch) a publicar. É o ramo onde as atualizações são feitas —
+# assim, cada nova alteração fica online automaticamente.
+BRANCH="${BRANCH:-claude/cpanel-github-deployment-3sp8i1}"
 
 cd "$REPO"
 
