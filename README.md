@@ -102,18 +102,33 @@ Entre em **`https://oseudominio.pt/admin`** com essas credenciais. ✅
 2. No cPanel → Git Version Control → **Update from Remote** → **Deploy**.
    - O site é atualizado e as **migrations novas** são aplicadas automaticamente.
 
-### Tornar o deploy 100% automático a cada push (opcional)
-O cPanel só faz *pull* quando lhe pedem. Para disparar a cada `git push`:
-- **GitHub → repositório → Settings → Webhooks → Add webhook** e usar o
-  endpoint de deploy do cPanel, **ou**
-- Um **cron job** no cPanel que corra periodicamente:
-  ```bash
-  cd ~/repositories/inforocasiao && git pull && /usr/local/cpanel/bin/dcpumc ... 
-  ```
-  (a forma mais simples e fiável é usar um pequeno script que faça `git pull`
-  no clone e depois copie para `public_html` + `php database/migrate.php`).
+### ⚡ Deploy 100% automático (já configurado — só falta ativar o cron)
 
-> Posso configurar o webhook/cron por si — é só dizer qual prefere.
+O cPanel, por si só, só faz *pull* quando carrega no botão. Para publicar
+**sozinho a cada `git push`**, o projeto inclui o script `bin/auto-pull.sh`:
+de X em X minutos verifica se há commits novos no GitHub e, se houver,
+atualiza o clone e publica automaticamente (copia para `public_html` +
+migrations). Se não houver nada novo, não faz nada.
+
+**Ativar (uma vez):** cPanel → **Cron Jobs** → adicionar, por exemplo de 5 em 5 minutos:
+
+```
+*/5 * * * * /bin/bash $HOME/repositories/inforocasiao/bin/auto-pull.sh >> $HOME/deploy.log 2>&1
+```
+
+Antes de ativar, abra `bin/auto-pull.sh` e confirme as duas variáveis no topo:
+
+- `REPO`   → a pasta do clone (a que indicou no *Repository Path* do cPanel)
+- `BRANCH` → o ramo a publicar (ex.: `main` depois de fazer o merge)
+
+A partir daí, o fluxo passa a ser simplesmente: **`git push` → o site atualiza
+sozinho** em poucos minutos. O registo de cada deploy fica em `~/deploy.log`.
+
+> **Alternativa (webhook):** se preferir deploy instantâneo em vez de
+> intervalos de minutos, dá para ligar um *webhook* do GitHub a um pequeno
+> recetor no servidor que chama `bin/auto-pull.sh`. O cron é mais simples e
+> fiável para a maioria dos casos; o webhook é para quando o "quase imediato"
+> não chega. Posso montar essa variante se precisar.
 
 ---
 

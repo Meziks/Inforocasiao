@@ -1,28 +1,15 @@
 ---
 # ============================================================
-# Deploy automático do cPanel (Git Version Control)
+# Deploy do cPanel (Git Version Control)
 # ------------------------------------------------------------
-# Quando carrega em "Update from Remote" e depois em "Deploy" no cPanel
-# (ou quando um webhook do GitHub o faz), o cPanel corre estas tarefas.
+# Corre quando carrega em "Deploy HEAD Commit" no cPanel — ou quando o
+# cron (bin/auto-pull.sh) o dispara automaticamente.
 #
-# O que faz:
-#   1. Garante que a pasta de destino (public_html) e uploads/ existem.
-#   2. Copia o código do repositório para public_html — SEM apagar as
-#      imagens já carregadas nem o config.php com as credenciais.
-#   3. Aplica as migrations pendentes da base de dados.
-#
-# NOTA: se o seu site não fica na raiz do domínio, ajuste DEPLOYPATH
-#       (ex.: $HOME/public_html/loja).
+# A lógica de publicação está toda em bin/cpanel-deploy.sh (fonte única),
+# para o botão do cPanel e o deploy automático fazerem exatamente o mesmo:
+#   1. Copia o código para public_html (sem apagar uploads/ nem config.php)
+#   2. Aplica as migrations pendentes da base de dados
 # ============================================================
 deployment:
   tasks:
-    - export DEPLOYPATH=$HOME/public_html
-    - /bin/mkdir -p $DEPLOYPATH/uploads
-    - >-
-      /usr/bin/rsync -a
-      --exclude='.git/'
-      --exclude='.github/'
-      --exclude='config/config.php'
-      ./ $DEPLOYPATH/
-    - /bin/chmod -R 755 $DEPLOYPATH/uploads
-    - cd $DEPLOYPATH && /usr/bin/env php database/migrate.php || echo "AVISO: migrations nao aplicadas automaticamente — corra 'php database/migrate.php' por SSH."
+    - /bin/bash bin/cpanel-deploy.sh
