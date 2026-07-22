@@ -1,0 +1,18 @@
+# Configuração com credenciais reais — NUNCA versionar
+/config/config.php
+
+# Imagens carregadas pelo gestor no servidor (não pertencem ao código)
+/uploads/*
+!/uploads/.gitkeep
+!/uploads/.htaccess
+
+# Dependências / build
+/vendor/
+/node_modules/
+
+# Sistema operativo / editores
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/

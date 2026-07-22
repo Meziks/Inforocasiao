@@ -1,0 +1,36 @@
+# ============================================================
+# Inforocasião — configuração Apache (público)
+# ============================================================
+
+# Encaminha todos os pedidos para o controlador frontal, exceto ficheiros
+# e pastas que existam mesmo (imagens, css, js, uploads).
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Forçar HTTPS (descomentar quando o SSL estiver ativo no cPanel)
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# Proteger ficheiros sensíveis
+<FilesMatch "^(config\.php|\.env|composer\.(json|lock)|\.cpanel\.yml|\.gitignore)$">
+    Require all denied
+</FilesMatch>
+
+# Impedir listagem de diretórios
+Options -Indexes
+
+# Cache básico para estáticos
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+</IfModule>
