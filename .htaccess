@@ -7,9 +7,11 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Forçar HTTPS (descomentar quando o SSL estiver ativo no cPanel)
-    # RewriteCond %{HTTPS} off
-    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    # Forçar HTTPS (SSL ativo). Considera também o cabeçalho de proxy, para
+    # evitar loops de redireccionamento quando o SSL termina num balanceador.
+    RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
