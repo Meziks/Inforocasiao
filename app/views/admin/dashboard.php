@@ -28,7 +28,7 @@
                                 <?php if (!empty($p['image'])): ?>
                                     <img src="<?= e(uploadUrl($p['image'])) ?>" alt="">
                                 <?php else: ?>
-                                    <span class="mini-placeholder">📦</span>
+                                    <span class="mini-placeholder"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#9298a6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.3 9 5.2M3.3 7.5 12 12.5l8.7-5M12 22V12.5"/><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/></svg></span>
                                 <?php endif; ?>
                             </td>
                             <td>
