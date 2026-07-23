@@ -34,9 +34,11 @@
     </div>
 </section>
 
-<section class="cta-band">
-    <div class="container cta-inner">
-        <div><h2>Precisa de uma reparação?</h2><p>Traga o seu equipamento ou fale connosco para agendar.</p></div>
-        <a href="<?= e(url('/contactos')) ?>" class="btn btn-light">Pedir orçamento</a>
+<section class="section" style="padding-top:0">
+    <div class="cta-band">
+        <div class="cta-inner">
+            <div><h2>Precisa de uma reparação?</h2><p>Traga o seu equipamento ou fale connosco para agendar.</p></div>
+            <a href="<?= e(url('/contactos')) ?>" class="btn btn-light btn-lg">Pedir orçamento</a>
+        </div>
     </div>
 </section>

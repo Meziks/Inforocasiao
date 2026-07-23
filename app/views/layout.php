@@ -50,7 +50,6 @@
             <a href="<?= e(url('/servicos')) ?>">Reparações</a>
             <a href="<?= e(url('/contactos')) ?>">Contactos</a>
         </nav>
-        <a href="<?= e(url('/produtos')) ?>" class="btn btn-primary btn-sm header-cta">Ver catálogo</a>
     </div>
 </header>
 
@@ -71,7 +70,6 @@
             <h4>Contactos</h4>
             <p>Rua do Clube Desportivo de Cucujães, 275<br>3720-385 Cucujães</p>
             <a href="tel:+351912138094">912 138 094</a>
-            <a href="tel:+351256842306">256 842 306</a>
             <div class="footer-social">
                 <a href="https://www.facebook.com/100017988694141/" target="_blank" rel="noopener" aria-label="Facebook">
                     <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M13.5 22v-8h2.7l.4-3.1h-3.1V8.9c0-.9.25-1.5 1.55-1.5H17V4.6c-.3 0-1.3-.1-2.45-.1-2.42 0-4.05 1.48-4.05 4.2v2.2H7.7V14h2.8v8h3z"/></svg>

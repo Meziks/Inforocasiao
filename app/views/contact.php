@@ -11,7 +11,6 @@
             <h3>Loja</h3>
             <p><strong>Morada:</strong><br>Rua do Clube Desportivo de Cucujães, 275<br>3720-385 Cucujães</p>
             <p><strong>Telemóvel:</strong> <a href="tel:+351912138094">912 138 094</a></p>
-            <p><strong>Telefone:</strong> <a href="tel:+351256842306">256 842 306</a></p>
         </div>
         <div class="contact-card">
             <h3>Horário</h3>

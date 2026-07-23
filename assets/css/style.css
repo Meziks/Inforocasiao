@@ -106,8 +106,8 @@ a.topbar-item:hover { color: #fff; }
 
 /* ---------- Hero ---------- */
 .hero { position: relative; background: linear-gradient(160deg, #14161f 0%, #0f1117 60%); color: #fff; padding: 84px 0 96px; overflow: hidden; }
-.hero::before { content: ""; position: absolute; top: -30%; right: -10%; width: 620px; height: 620px; background: radial-gradient(circle, rgba(226,0,26,.55) 0%, rgba(226,0,26,0) 68%); filter: blur(10px); }
-.hero::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px); background-size: 26px 26px; opacity: .5; }
+.hero::before { content: ""; position: absolute; top: -30%; right: -10%; width: 620px; height: 620px; background: radial-gradient(circle, rgba(226,0,26,.55) 0%, rgba(226,0,26,0) 68%); filter: blur(10px); pointer-events: none; }
+.hero::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px); background-size: 26px 26px; opacity: .5; pointer-events: none; }
 .hero-inner { position: relative; z-index: 1; display: grid; grid-template-columns: 1.25fr .85fr; gap: 54px; align-items: center; }
 .hero-text h1 { font-size: clamp(2.1rem, 4.4vw, 3.1rem); color: #fff; }
 .hero-text h1 span { color: #ff5c69; }
@@ -171,8 +171,8 @@ a.topbar-item:hover { color: #fff; }
 
 /* ---------- Faixa CTA ---------- */
 .cta-band { position: relative; background: linear-gradient(135deg, var(--brand), var(--brand-dark)); color: #fff; border-radius: var(--radius-lg); overflow: hidden; margin: 40px auto 0; max-width: var(--max); }
-.cta-band::after { content: ""; position: absolute; top: -40%; right: -5%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(255,255,255,.16), transparent 70%); }
-.cta-inner { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 44px 44px; flex-wrap: wrap; }
+.cta-band::after { content: ""; position: absolute; top: -40%; right: -5%; width: 380px; height: 380px; background: radial-gradient(circle, rgba(255,255,255,.16), transparent 70%); pointer-events: none; }
+.cta-inner { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 44px 44px; flex-wrap: wrap; }
 .cta-inner h2 { margin: 0; color: #fff; }
 .cta-inner p { margin: 6px 0 0; color: #ffdfe2; }
 
