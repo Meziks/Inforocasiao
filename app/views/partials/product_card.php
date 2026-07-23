@@ -4,7 +4,13 @@
         <?php if (!empty($p['image'])): ?>
             <img src="<?= e(uploadUrl($p['image'])) ?>" alt="<?= e($p['name']) ?>" loading="lazy">
         <?php else: ?>
-            <div class="thumb-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.3 9 5.2M3.3 7.5 12 12.5l8.7-5M12 22V12.5"/><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/></svg></div>
+            <div class="thumb-gen">
+                <span class="thumb-gen-mark"><?= e($p['brand'] ?: 'inforocasião') ?></span>
+                <div class="thumb-gen-fore">
+                    <span class="thumb-gen-ico"><?= deviceIconSvg($p['category_name'] ?? '') ?></span>
+                    <span class="thumb-gen-name"><?= e($p['name']) ?></span>
+                </div>
+            </div>
         <?php endif; ?>
         <?php if (!empty($p['condition']) && $p['condition'] !== 'Novo'): ?>
             <span class="badge badge-condition"><?= e($p['condition']) ?></span>

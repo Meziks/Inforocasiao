@@ -158,6 +158,28 @@ a.topbar-item:hover { color: #fff; }
 .thumb-placeholder svg { width: 54px; height: 54px; }
 .thumb-placeholder.large svg { width: 90px; height: 90px; }
 .thumb-placeholder.large { aspect-ratio: 1; display: grid; place-items: center; width: 100%; }
+
+/* Placeholder gerado (produto sem foto) */
+.thumb-gen { position: relative; width: 100%; height: 100%; display: grid; place-items: center; overflow: hidden;
+    background: radial-gradient(120% 120% at 15% 10%, #20232e 0%, #14161f 55%, #0f1117 100%); }
+.thumb-gen.large { aspect-ratio: 1; width: 100%; }
+.thumb-gen::before { content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px); background-size: 20px 20px; }
+.thumb-gen::after { content: ""; position: absolute; top: -50%; right: -20%; width: 70%; height: 160%;
+    background: radial-gradient(circle, rgba(226,0,26,.35), transparent 65%); pointer-events: none; }
+.thumb-gen-mark { position: absolute; bottom: 8%; left: 50%; transform: translateX(-50%);
+    font-family: var(--font-head); font-weight: 800; text-transform: uppercase; letter-spacing: .18em;
+    font-size: 2.4rem; color: rgba(255,255,255,.055); white-space: nowrap; }
+.thumb-gen-fore { position: relative; z-index: 1; text-align: center; padding: 18px; max-width: 90%; }
+.thumb-gen-ico { display: grid; place-items: center; width: 56px; height: 56px; margin: 0 auto 12px;
+    border-radius: 15px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); color: #ff5c69; }
+.thumb-gen-ico svg { width: 28px; height: 28px; }
+.thumb-gen-name { display: block; font-family: var(--font-head); font-weight: 700; font-size: .92rem;
+    line-height: 1.35; color: #e7e9f0; }
+.thumb-gen.large .thumb-gen-ico { width: 84px; height: 84px; border-radius: 22px; }
+.thumb-gen.large .thumb-gen-ico svg { width: 42px; height: 42px; }
+.thumb-gen.large .thumb-gen-name { font-size: 1.3rem; }
+.thumb-gen.large .thumb-gen-mark { font-size: 4.6rem; }
 .badge-condition { position: absolute; top: 12px; left: 12px; background: var(--ink); color: #fff; font-size: .72rem; font-weight: 700; padding: 5px 11px; border-radius: 20px; letter-spacing: .02em; }
 .product-info { padding: 17px 18px 20px; display: flex; flex-direction: column; flex: 1; }
 .product-cat { font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--brand); font-weight: 700; }
