@@ -186,7 +186,7 @@ a.topbar-item:hover { color: #fff; }
 .product-info h3 { font-size: 1.04rem; margin: 7px 0 2px; }
 .product-brand { color: var(--muted); font-size: .85rem; }
 .product-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
-.price { font-family: var(--font-head); font-weight: 800; font-size: 1.2rem; color: var(--ink); }
+.price { font-family: var(--font-head); font-weight: 800; font-size: 1.2rem; color: var(--ink); white-space: nowrap; }
 .stock { font-size: .76rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
 .stock-in { background: var(--ok-soft); color: var(--ok); }
 .stock-out { background: var(--danger-soft); color: var(--danger); }
@@ -347,21 +347,39 @@ textarea.input { resize: vertical; }
     .product-detail { grid-template-columns: 1fr; }
     .footer-grid { grid-template-columns: 1fr 1fr; }
     .header-cta { display: none; }
+    .reviews-wrap { grid-template-columns: 1fr; }
+    .review-summary { position: static; display: flex; flex-direction: column; align-items: center; }
 }
 @media (max-width: 680px) {
+    .section { padding: 44px 0; }
+    .section-head h2 { font-size: 1.55rem; }
     .topbar-hours { display: none; }
     .main-nav { gap: 2px; }
     .main-nav a { padding: 8px 10px; font-size: .9rem; }
     .brand-logo { height: 38px; }
     .product-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+    .product-info { padding: 14px 14px 16px; }
+    .product-info h3 { font-size: .98rem; }
+    /* Preço e disponibilidade empilhados para não partir linha */
+    .product-foot { flex-direction: column; align-items: flex-start; gap: 6px; }
+    /* No placeholder, esconder o nome (já aparece por baixo) */
+    .thumb-gen-name { display: none; }
+    .thumb-gen-mark { font-size: 1.8rem; bottom: 12%; }
     .feature-grid { grid-template-columns: 1fr; }
     .feature-item + .feature-item { border-left: none; border-top: 1px solid var(--line); }
     .services-grid { grid-template-columns: 1fr; }
     .footer-grid { grid-template-columns: 1fr; gap: 28px; }
     .cta-inner { padding: 34px 26px; }
-    .hero { padding: 60px 0 70px; }
+    .hero { padding: 56px 0 64px; }
+    /* Avaliações: empilhar e esconder a caixa de convite */
+    .review-cards { grid-template-columns: 1fr; }
+    .review-summary { width: 100%; }
+    .review-empty { display: none; }
 }
 @media (max-width: 480px) {
     .header-inner { gap: 12px; }
     .topbar-item.topbar-item:not(:first-child) { display: none; }
+    .hero-text h1 { font-size: 1.8rem; }
+    .category-grid { grid-template-columns: 1fr 1fr; }
+    .btn-lg { padding: 13px 22px; font-size: .98rem; }
 }

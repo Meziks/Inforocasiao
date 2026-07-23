@@ -50,7 +50,7 @@ $gLogo  = '<svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true">'
                 </div>
             <?php else: ?>
                 <div class="review-empty">
-                    <p>Clientes satisfeitos por toda a região. Veja as avaliações reais — e deixe a sua — na nossa página do Google.</p>
+                    <p>Clientes satisfeitos por toda a região. Veja as avaliações reais na nossa página do Google e deixe também a sua.</p>
                     <a href="<?= e($rev['url']) ?>" target="_blank" rel="noopener" class="btn btn-primary">Ler as avaliações no Google</a>
                 </div>
             <?php endif; ?>
