@@ -44,3 +44,4 @@ require BASE_PATH . '/app/helpers.php';
 require BASE_PATH . '/app/Database.php';
 require BASE_PATH . '/app/Auth.php';
 require BASE_PATH . '/app/Reviews.php';
+require BASE_PATH . '/app/Seo.php';

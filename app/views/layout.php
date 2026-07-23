@@ -1,16 +1,53 @@
-<?php $appName = $GLOBALS['config']['app']['name'] ?? 'Inforocasião'; ?>
+<?php
+$appName = $GLOBALS['config']['app']['name'] ?? 'Inforocasião';
+$seo         = seo();
+$metaTitle   = $title ? "$title — $appName" : "$appName — Informática, Telemóveis e Reparações em Cucujães";
+$metaDesc    = $seo['description'] ?? Seo::DESCRIPTION;
+$canonical   = Seo::abs($seo['canonical'] ?? ($_SERVER['REQUEST_URI'] ?? '/'));
+// canonical sem query string, exceto filtros de produtos
+$canonical   = strtok($canonical, '?') ?: $canonical;
+$ogImage     = Seo::abs('assets/img/og-image.png');
+?>
 <!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= e($title ? "$title — $appName" : "$appName — Informática, Telemóveis e Reparações") ?></title>
-    <meta name="description" content="<?= e($appName) ?> — Venda de computadores, telemóveis e componentes electrónicos, novos e recondicionados. Serviço de reparações.">
+    <title><?= e($metaTitle) ?></title>
+    <meta name="description" content="<?= e($metaDesc) ?>">
+    <link rel="canonical" href="<?= e($canonical) ?>">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="theme-color" content="#e2001a">
+    <meta name="geo.region" content="PT-01">
+    <meta name="geo.placename" content="Cucujães">
+
+    <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="<?= e($appName) ?>">
+    <meta property="og:locale" content="pt_PT">
+    <meta property="og:title" content="<?= e($metaTitle) ?>">
+    <meta property="og:description" content="<?= e($metaDesc) ?>">
+    <meta property="og:url" content="<?= e($canonical) ?>">
+    <meta property="og:image" content="<?= e($ogImage) ?>">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= e($metaTitle) ?>">
+    <meta name="twitter:description" content="<?= e($metaDesc) ?>">
+    <meta name="twitter:image" content="<?= e($ogImage) ?>">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap">
     <link rel="stylesheet" href="<?= e(url('assets/css/style.css')) ?>">
     <link rel="icon" href="<?= e(url('assets/img/favicon.svg')) ?>" type="image/svg+xml">
+
+    <!-- Dados estruturados (Schema.org) -->
+    <?= Seo::jsonLdTag(Seo::businessJsonLd()) ?>
+    <?= Seo::jsonLdTag(Seo::websiteJsonLd()) ?>
+    <?php foreach (($seo['jsonld'] ?? []) as $block): ?>
+        <?= Seo::jsonLdTag($block) ?>
+    <?php endforeach; ?>
 </head>
 <body>
 <div class="topbar">

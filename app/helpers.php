@@ -84,6 +84,21 @@ function csrf_verify(): void
     }
 }
 
+/**
+ * Define e/ou lê os metadados SEO da página atual (title, description,
+ * canonical, ogImage e jsonld extra). Chamar nas rotas antes de render().
+ */
+function seo(array $data = []): array
+{
+    if (!isset($GLOBALS['_seo'])) {
+        $GLOBALS['_seo'] = [];
+    }
+    if ($data) {
+        $GLOBALS['_seo'] = array_merge($GLOBALS['_seo'], $data);
+    }
+    return $GLOBALS['_seo'];
+}
+
 /** Renderiza uma view dentro do layout principal. */
 function render(string $view, array $data = [], ?string $layout = 'layout'): void
 {

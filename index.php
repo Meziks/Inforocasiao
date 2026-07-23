@@ -28,6 +28,7 @@ try {
                  WHERE p.is_active = 1 AND p.is_featured = 1
                  ORDER BY p.created_at DESC LIMIT 4"
             );
+            seo(['description' => Seo::DESCRIPTION, 'canonical' => '/']);
             render('home', ['destaques' => $destaques, 'title' => null]);
             break;
 
@@ -50,6 +51,11 @@ try {
             $sql .= " ORDER BY p.created_at DESC";
             $produtos   = Database::all($sql, $params);
             $categorias = Database::all("SELECT * FROM categories ORDER BY name");
+            seo([
+                'description' => 'Catálogo da Inforocasião: computadores, portáteis, telemóveis e '
+                    . 'componentes electrónicos, novos e recondicionados, em Cucujães. Veja preços e disponibilidade.',
+                'canonical'   => '/produtos',
+            ]);
             render('products', compact('produtos', 'categorias', 'categoria', 'q') + ['title' => 'Produtos']);
             break;
 
@@ -65,15 +71,75 @@ try {
                 render('404', ['title' => 'Não encontrado']);
                 break;
             }
+            $pDesc = trim((string) ($produto['description'] ?? ''));
+            if ($pDesc === '') {
+                $pDesc = sprintf(
+                    '%s%s — %s por %s na Inforocasião, em Cucujães.',
+                    $produto['name'],
+                    !empty($produto['brand']) ? ' ' . $produto['brand'] : '',
+                    $produto['condition'] ?? 'Novo',
+                    money($produto['price'])
+                );
+            }
+            seo([
+                'description' => mb_strimwidth($pDesc, 0, 160, '…'),
+                'canonical'   => '/produto/' . $produto['id'],
+                'jsonld'      => [
+                    Seo::productJsonLd($produto),
+                    Seo::breadcrumbJsonLd([
+                        ['Início', '/'],
+                        ['Produtos', '/produtos'],
+                        [$produto['name'], '/produto/' . $produto['id']],
+                    ]),
+                ],
+            ]);
             render('product', ['produto' => $produto, 'title' => $produto['name']]);
             break;
 
         case $path === '/servicos' && $method === 'GET':
+            seo([
+                'description' => 'Reparação de telemóveis e computadores em Cucujães: ecrãs, baterias, '
+                    . 'remoção de vírus, upgrades (SSD/RAM), recuperação de dados e recondicionamento. '
+                    . 'Diagnóstico e orçamento sem compromisso.',
+                'canonical'   => '/servicos',
+            ]);
             render('services', ['title' => 'Serviços e Reparações']);
             break;
 
         case $path === '/contactos' && $method === 'GET':
+            seo([
+                'description' => 'Contactos da Inforocasião em Cucujães: Rua do Clube Desportivo de Cucujães 275, '
+                    . '3720-385. Telemóvel/WhatsApp 912 138 094. Horário e mapa.',
+                'canonical'   => '/contactos',
+            ]);
             render('contact', ['title' => 'Contactos']);
+            break;
+
+        // ---------- SEO: sitemap e robots ----------
+        case $path === '/sitemap.xml' && $method === 'GET':
+            header('Content-Type: application/xml; charset=utf-8');
+            $urls = [
+                ['/', '1.0'], ['/produtos', '0.9'], ['/servicos', '0.8'], ['/contactos', '0.7'],
+            ];
+            $prod = Database::all("SELECT id, updated_at FROM products WHERE is_active = 1 ORDER BY updated_at DESC");
+            echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+            echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+            foreach ($urls as [$p, $prio]) {
+                echo '  <url><loc>' . e(Seo::abs($p)) . '</loc><changefreq>weekly</changefreq><priority>' . $prio . "</priority></url>\n";
+            }
+            foreach ($prod as $pr) {
+                $lastmod = !empty($pr['updated_at']) ? date('Y-m-d', strtotime($pr['updated_at'])) : date('Y-m-d');
+                echo '  <url><loc>' . e(Seo::abs('/produto/' . $pr['id'])) . '</loc><lastmod>' . $lastmod . "</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>\n";
+            }
+            echo '</urlset>';
+            break;
+
+        case $path === '/robots.txt' && $method === 'GET':
+            header('Content-Type: text/plain; charset=utf-8');
+            echo "User-agent: *\n";
+            echo "Allow: /\n";
+            echo "Disallow: /admin\n\n";
+            echo "Sitemap: " . Seo::abs('/sitemap.xml') . "\n";
             break;
 
         // ---------- Autenticação ----------
