@@ -94,6 +94,8 @@
     <?php endif; ?>
 </section>
 
+<?php require BASE_PATH . '/app/views/partials/reviews.php'; ?>
+
 <section class="section" style="padding-top:0">
     <div class="cta-band">
         <div class="cta-inner">

@@ -1,5 +1,9 @@
 # Configuração com credenciais reais — NUNCA versionar
 /config/config.php
+/config/google.php
+
+# Cache de avaliações do Google (gerado em runtime)
+/storage/reviews.json
 
 # Imagens carregadas pelo gestor no servidor (não pertencem ao código)
 /uploads/*
