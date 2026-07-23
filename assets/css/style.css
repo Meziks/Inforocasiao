@@ -73,6 +73,8 @@ h1, h2, h3, h4 { font-family: var(--font-head); line-height: 1.15; margin: 0 0 .
 .btn-ghost:hover { background: rgba(0,0,0,.05); color: var(--ink); }
 .btn-light { background: #fff; color: var(--brand); }
 .btn-light:hover { color: var(--brand-dark); box-shadow: var(--shadow-md); }
+.btn-whatsapp { background: #25d366; color: #fff; margin-top: 6px; }
+.btn-whatsapp:hover { background: #1eb85a; color: #fff; box-shadow: 0 8px 20px rgba(37,211,102,.35); }
 .btn-danger { background: #fff; border-color: #f3c7c7; color: var(--danger); }
 .btn-danger:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
 .btn-lg { padding: 15px 30px; font-size: 1.03rem; }
