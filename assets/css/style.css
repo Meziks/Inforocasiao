@@ -52,7 +52,7 @@ h1, h2, h3, h4 { font-family: var(--font-head); line-height: 1.15; margin: 0 0 .
 .container { max-width: var(--max); margin: 0 auto; padding: 0 22px; }
 .muted { color: var(--muted); }
 .small { font-size: .85rem; }
-.section { padding: 60px 0; }
+.section { padding-block: 60px; }
 .eyebrow { text-transform: uppercase; letter-spacing: .14em; font-size: .76rem; font-weight: 700; color: var(--brand); margin: 0 0 14px; }
 
 /* ---------- Botões ---------- */
@@ -102,9 +102,11 @@ a.topbar-item:hover { color: #fff; }
 .brand-mark { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; background: linear-gradient(135deg, var(--brand), #ff5563); color: #fff; font-weight: 800; font-family: var(--font-head); }
 .brand-text { font-family: var(--font-head); font-weight: 700; color: var(--ink); }
 .main-nav { display: flex; align-items: center; gap: 6px; margin-left: auto; }
-.main-nav a { color: var(--ink-soft); font-weight: 600; font-size: .95rem; padding: 9px 14px; border-radius: 9px; }
+.main-nav a { display: inline-flex; align-items: center; gap: 7px; color: var(--ink-soft); font-weight: 600; font-size: .95rem; padding: 9px 13px; border-radius: 9px; }
+.main-nav a svg { width: 17px; height: 17px; flex: none; opacity: .85; }
 .main-nav a:hover { color: var(--brand); background: var(--brand-soft); text-decoration: none; }
 .header-cta { margin-left: 8px; }
+.nav-toggle { display: none; }
 
 /* ---------- Hero ---------- */
 .hero { position: relative; background: linear-gradient(160deg, #14161f 0%, #0f1117 60%); color: #fff; padding: 84px 0 96px; overflow: hidden; }
@@ -353,15 +355,23 @@ textarea.input { resize: vertical; }
     .review-summary { position: static; display: flex; flex-direction: column; align-items: center; }
 }
 @media (max-width: 680px) {
-    .section { padding: 44px 0; }
+    .section { padding-block: 44px; }
     .section-head h2 { font-size: 1.55rem; }
     .topbar-hours { display: none; }
-    /* Cabeçalho: logótipo na 1ª linha, menu na 2ª (evita esmagar o logo) */
-    .header-inner { flex-wrap: wrap; height: auto; gap: 8px; padding-top: 10px; padding-bottom: 10px; }
+    /* Cabeçalho mobile: logótipo + botão "☰"; menu abre como painel */
     .brand { flex-shrink: 0; }
     .brand-logo { height: 40px; }
-    .main-nav { width: 100%; margin-left: 0; justify-content: center; flex-wrap: wrap; gap: 4px 6px; }
-    .main-nav a { padding: 6px 10px; font-size: .88rem; }
+    .nav-toggle { display: inline-flex; align-items: center; justify-content: center; margin-left: auto;
+        width: 46px; height: 46px; border: 1px solid var(--line-strong); border-radius: 11px;
+        background: #fff; color: var(--ink); cursor: pointer; }
+    .nav-toggle svg { width: 24px; height: 24px; }
+    .site-header .main-nav { position: absolute; top: 100%; left: 0; right: 0; display: none;
+        flex-direction: column; align-items: stretch; gap: 2px; margin-left: 0; padding: 10px;
+        background: #fff; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+        box-shadow: var(--shadow-lg); }
+    .site-header .main-nav.open { display: flex; }
+    .site-header .main-nav a { width: 100%; padding: 13px 14px; border-radius: 10px; font-size: 1rem; }
+    .site-header .main-nav a svg { width: 20px; height: 20px; opacity: 1; color: var(--brand); }
     .product-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
     .product-info { padding: 14px 14px 16px; }
     .product-info h3 { font-size: .98rem; }
