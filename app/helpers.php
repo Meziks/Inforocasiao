@@ -18,13 +18,22 @@ function url(string $path = ''): string
     return $base . '/' . ltrim($path, '/');
 }
 
-/** URL de um ficheiro carregado (imagem de produto). */
+/** URL de um ficheiro carregado (imagem de produto). Aceita também URLs externos. */
 function uploadUrl(?string $file): string
 {
     if (!$file) {
         return url('assets/img/placeholder.svg');
     }
+    if (preg_match('#^https?://#i', $file)) {
+        return $file;
+    }
     return url('uploads/' . ltrim($file, '/'));
+}
+
+/** Verdadeiro se o valor guardado na imagem é um URL externo (não um ficheiro local). */
+function isRemoteImage(?string $file): bool
+{
+    return $file !== null && preg_match('#^https?://#i', $file) === 1;
 }
 
 /** Redireciona e termina a execução. */

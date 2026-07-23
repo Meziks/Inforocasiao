@@ -26,7 +26,7 @@ try {
                 "SELECT p.*, c.name AS category_name FROM products p
                  LEFT JOIN categories c ON c.id = p.category_id
                  WHERE p.is_active = 1 AND p.is_featured = 1
-                 ORDER BY p.created_at DESC LIMIT 6"
+                 ORDER BY p.created_at DESC LIMIT 4"
             );
             render('home', ['destaques' => $destaques, 'title' => null]);
             break;
@@ -149,7 +149,7 @@ try {
             csrf_verify();
             $produto = Database::one("SELECT image FROM products WHERE id = ?", [(int) $m[1]]);
             Database::run("DELETE FROM products WHERE id = ?", [(int) $m[1]]);
-            if ($produto && $produto['image']) {
+            if ($produto && $produto['image'] && !isRemoteImage($produto['image'])) {
                 @unlink(BASE_PATH . '/uploads/' . $produto['image']);
             }
             flash('success', 'Artigo apagado.');
@@ -196,10 +196,17 @@ function saveProduct(?int $id): void
         redirect($id ? "/admin/produtos/$id/editar" : '/admin/produtos/novo');
     }
 
-    // Upload de imagem (opcional)
+    // Imagem: ficheiro carregado tem prioridade; senão, URL colado (opcional)
     $imageName = null;
     if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $imageName = handleImageUpload($_FILES['image']);
+    } elseif (!empty($_POST['image_url'])) {
+        $urlIn = trim((string) $_POST['image_url']);
+        if (preg_match('#^https?://#i', $urlIn)) {
+            $imageName = $urlIn;
+        } else {
+            flash('error', 'O URL da imagem deve começar por http:// ou https://');
+        }
     }
 
     if ($id === null) {
@@ -214,7 +221,7 @@ function saveProduct(?int $id): void
         // Se enviou nova imagem, apaga a antiga
         if ($imageName !== null) {
             $old = Database::one("SELECT image FROM products WHERE id = ?", [$id]);
-            if ($old && $old['image']) {
+            if ($old && $old['image'] && !isRemoteImage($old['image'])) {
                 @unlink(BASE_PATH . '/uploads/' . $old['image']);
             }
         }

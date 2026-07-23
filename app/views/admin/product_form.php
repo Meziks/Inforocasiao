@@ -59,10 +59,16 @@ $conditions = ['Novo', 'Usado', 'Recondicionado'];
             <?php if ($isEdit && !empty($produto['image'])): ?>
                 <span class="current-image">
                     <img src="<?= e(uploadUrl($produto['image'])) ?>" alt="">
-                    <span class="muted small">Imagem atual — envie uma nova para substituir.</span>
+                    <span class="muted small">Imagem atual — carregue uma nova (ou cole um URL) para substituir.</span>
                 </span>
             <?php endif; ?>
             <input type="file" name="image" accept="image/*" class="input">
+        </label>
+
+        <label>… ou colar o endereço (URL) de uma imagem
+            <input type="url" name="image_url" class="input" placeholder="https://…/foto.jpg"
+                   value="<?= (isset($produto['image']) && isRemoteImage($produto['image'])) ? e($produto['image']) : '' ?>">
+            <span class="muted small">Útil para imagens de licença livre. Se carregar um ficheiro acima, este campo é ignorado.</span>
         </label>
 
         <div class="form-checks">
