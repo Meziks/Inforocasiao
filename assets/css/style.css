@@ -250,6 +250,10 @@ a.topbar-item:hover { color: #fff; }
 .detail-badges { display: flex; gap: 8px; margin-bottom: 18px; }
 .detail-price { font-family: var(--font-head); font-size: 2.2rem; font-weight: 800; color: var(--brand); margin-bottom: 22px; }
 .detail-desc { margin-bottom: 26px; color: var(--ink-soft); }
+.detail-fulfil { list-style: none; margin: 22px 0 0; padding: 18px 0 0; border-top: 1px solid var(--line); display: grid; gap: 12px; }
+.detail-fulfil li { display: flex; align-items: center; gap: 12px; color: var(--ink-soft); font-size: .92rem; }
+.detail-fulfil svg { width: 22px; height: 22px; flex: none; color: var(--brand); }
+.detail-fulfil strong { color: var(--ink); font-weight: 600; }
 .badge { background: #eef0f5; color: var(--ink-soft); font-size: .8rem; font-weight: 700; padding: 6px 13px; border-radius: 20px; }
 .badge-ok { background: var(--ok-soft); color: var(--ok); }
 .badge-out { background: var(--danger-soft); color: var(--danger); }
