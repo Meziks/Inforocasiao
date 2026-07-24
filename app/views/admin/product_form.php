@@ -25,7 +25,7 @@ $conditions = ['Novo', 'Usado', 'Recondicionado'];
             </label>
             <label>Categoria
                 <select name="category_id" class="input">
-                    <option value="">— Sem categoria —</option>
+                    <option value="">Sem categoria</option>
                     <?php foreach ($categorias as $c): ?>
                         <option value="<?= (int)$c['id'] ?>" <?= (int)($produto['category_id'] ?? 0) === (int)$c['id'] ? 'selected' : '' ?>>
                             <?= e($c['name']) ?>
@@ -59,7 +59,7 @@ $conditions = ['Novo', 'Usado', 'Recondicionado'];
             <?php if ($isEdit && !empty($produto['image'])): ?>
                 <span class="current-image">
                     <img src="<?= e(uploadUrl($produto['image'])) ?>" alt="">
-                    <span class="muted small">Imagem atual — carregue uma nova (ou cole um URL) para substituir.</span>
+                    <span class="muted small">Imagem atual. Carregue uma nova (ou cole um URL) para substituir.</span>
                 </span>
             <?php endif; ?>
             <input type="file" name="image" accept="image/*" class="input">

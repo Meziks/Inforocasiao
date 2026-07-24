@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= e($title ? "$title — Gestão" : "Gestão") ?> · <?= e($appName) ?></title>
+    <title><?= e($title ? "$title · Gestão" : "Gestão") ?> · <?= e($appName) ?></title>
     <meta name="robots" content="noindex, nofollow">
     <link rel="stylesheet" href="<?= e(url('assets/css/style.css')) ?>">
 </head>

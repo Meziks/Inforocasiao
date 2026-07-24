@@ -45,7 +45,7 @@
             <?php endif; ?>
 
             <a href="<?= e(url('/contactos')) ?>" class="btn btn-primary btn-lg">Contactar para comprar</a>
-            <p class="muted small">Reserve ou peça mais informações — respondemos rapidamente.</p>
+            <p class="muted small">Reserve ou peça mais informações. Respondemos rapidamente.</p>
 
             <ul class="detail-fulfil">
                 <li>
@@ -54,7 +54,7 @@
                 </li>
                 <li>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7z"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="18.5" cy="18.5" r="2"/></svg>
-                    <span><strong>Envio para todo o país</strong> — portes calculados conforme o artigo</span>
+                    <span><strong>Envio para todo o país</strong> · portes calculados conforme o artigo</span>
                 </li>
                 <li>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg>

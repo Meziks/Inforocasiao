@@ -3,7 +3,7 @@
         <div class="hero-text">
             <p class="eyebrow">Informática · Telemóveis · Reparações</p>
             <h1>Aparelhos eletrónicos novos e <span>recondicionados</span>.</h1>
-            <p class="lead">Na infor ocasião encontra computadores, telemóveis e componentes — e um serviço de reparação eletrónica com garantia de qualidade.</p>
+            <p class="lead">Na infor ocasião encontra computadores, telemóveis e componentes, além de um serviço de reparação eletrónica com garantia de qualidade.</p>
             <div class="hero-actions">
                 <a href="<?= e(url('/produtos')) ?>" class="btn btn-primary btn-lg">Ver produtos</a>
                 <a href="<?= e(url('/servicos')) ?>" class="btn btn-outline btn-lg" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.3)">Preciso de reparar</a>

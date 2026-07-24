@@ -1,7 +1,7 @@
 <section class="page-head">
     <div class="container">
         <h1>Produtos</h1>
-        <p class="muted">Computadores, telemóveis e componentes — novos e recondicionados.</p>
+        <p class="muted">Computadores, telemóveis e componentes, novos e recondicionados.</p>
     </div>
 </section>
 

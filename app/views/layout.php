@@ -1,7 +1,7 @@
 <?php
 $appName = $GLOBALS['config']['app']['name'] ?? 'Inforocasião';
 $seo         = seo();
-$metaTitle   = $title ? "$title — $appName" : "$appName — Informática, Telemóveis e Reparações em Cucujães";
+$metaTitle   = $title ? "$title · $appName" : "$appName · Informática, Telemóveis e Reparações em Cucujães";
 $metaDesc    = $seo['description'] ?? Seo::DESCRIPTION;
 $canonical   = Seo::abs($seo['canonical'] ?? ($_SERVER['REQUEST_URI'] ?? '/'));
 // canonical sem query string, exceto filtros de produtos

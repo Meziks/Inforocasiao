@@ -36,7 +36,7 @@
                                 <?php if (!empty($p['is_featured'])): ?><span class="tag tag-star">★ destaque</span><?php endif; ?>
                                 <?php if (!empty($p['brand'])): ?><br><span class="muted small"><?= e($p['brand']) ?></span><?php endif; ?>
                             </td>
-                            <td><?= e($p['category_name'] ?? '—') ?></td>
+                            <td><?= e($p['category_name'] ?? 'Sem categoria') ?></td>
                             <td><?= money($p['price']) ?></td>
                             <td><?= (int)$p['stock'] ?></td>
                             <td>

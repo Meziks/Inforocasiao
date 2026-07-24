@@ -37,7 +37,7 @@
     </div>
     <div class="map-wrap">
         <iframe
-            title="Mapa — Inforocasião"
+            title="Mapa · Inforocasião"
             src="https://www.google.com/maps?q=Rua%20do%20Clube%20Desportivo%20de%20Cucuj%C3%A3es%20275%2C%203720-385&output=embed"
             width="100%" height="320" style="border:0;border-radius:14px" loading="lazy"
             referrerpolicy="no-referrer-when-downgrade"></iframe>

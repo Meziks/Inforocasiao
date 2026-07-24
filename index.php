@@ -74,7 +74,7 @@ try {
             $pDesc = trim((string) ($produto['description'] ?? ''));
             if ($pDesc === '') {
                 $pDesc = sprintf(
-                    '%s%s — %s por %s na Inforocasião, em Cucujães.',
+                    '%s%s · %s por %s na Inforocasião, em Cucujães.',
                     $produto['name'],
                     !empty($produto['brand']) ? ' ' . $produto['brand'] : '',
                     $produto['condition'] ?? 'Novo',
