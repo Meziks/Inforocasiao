@@ -25,6 +25,14 @@ final class Seo
         'instagram'   => 'https://www.instagram.com/inforocasiao.vendas/',
     ];
 
+    /**
+     * Condições comerciais declaradas nos produtos (Schema.org).
+     * ALTERAR aqui se mudarem os portes ou a política de devolução.
+     */
+    public const SHIPPING_FREE   = true;   // portes grátis em Portugal
+    public const SHIPPING_COUNTRY = 'PT';
+    public const RETURN_DAYS      = 14;     // dias para devolução (mínimo legal PT)
+
     public const DESCRIPTION =
         'A Inforocasião é uma loja de informática em Cucujães (Oliveira de Azeméis) '
         . 'especializada na venda de computadores, portáteis, telemóveis e componentes '
@@ -153,6 +161,8 @@ final class Seo
                 'itemCondition' => $condition,
                 'url'           => self::abs('/produto/' . ($p['id'] ?? '')),
                 'seller'        => ['@type' => 'Organization', 'name' => self::BIZ['name']],
+                'shippingDetails'         => self::shippingDetails(),
+                'hasMerchantReturnPolicy' => self::returnPolicy(),
             ],
         ];
         if (!empty($p['brand'])) {
@@ -162,6 +172,41 @@ final class Seo
             $data['description'] = $p['description'];
         }
         return $data;
+    }
+
+    /** Portes de envio (Schema.org OfferShippingDetails). */
+    private static function shippingDetails(): array
+    {
+        return [
+            '@type'        => 'OfferShippingDetails',
+            'shippingRate' => [
+                '@type'    => 'MonetaryAmount',
+                'value'    => self::SHIPPING_FREE ? '0' : '0',
+                'currency' => 'EUR',
+            ],
+            'shippingDestination' => [
+                '@type'          => 'DefinedRegion',
+                'addressCountry' => self::SHIPPING_COUNTRY,
+            ],
+            'deliveryTime' => [
+                '@type'        => 'ShippingDeliveryTime',
+                'handlingTime' => ['@type' => 'QuantitativeValue', 'minValue' => 0, 'maxValue' => 1, 'unitCode' => 'DAY'],
+                'transitTime'  => ['@type' => 'QuantitativeValue', 'minValue' => 1, 'maxValue' => 3, 'unitCode' => 'DAY'],
+            ],
+        ];
+    }
+
+    /** Política de devolução (Schema.org MerchantReturnPolicy). */
+    private static function returnPolicy(): array
+    {
+        return [
+            '@type'                => 'MerchantReturnPolicy',
+            'applicableCountry'    => self::SHIPPING_COUNTRY,
+            'returnPolicyCategory' => 'https://schema.org/MerchantReturnFiniteReturnWindow',
+            'merchantReturnDays'   => self::RETURN_DAYS,
+            'returnMethod'         => 'https://schema.org/ReturnInStore',
+            'returnFees'           => 'https://schema.org/FreeReturn',
+        ];
     }
 
     /** JSON-LD de migalhas (breadcrumb). $items = [[nome, caminho], ...] */
