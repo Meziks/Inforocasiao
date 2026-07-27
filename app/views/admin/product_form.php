@@ -55,7 +55,7 @@ $conditions = ['Novo', 'Usado', 'Recondicionado'];
             <textarea name="description" rows="5" class="input" placeholder="Características, estado, garantia…"><?= $val('description') ?></textarea>
         </label>
 
-        <label>Imagem
+        <label>Imagem (Principal)
             <?php if ($isEdit && !empty($produto['image'])): ?>
                 <span class="current-image">
                     <img src="<?= e(uploadUrl($produto['image'])) ?>" alt="">
@@ -65,10 +65,55 @@ $conditions = ['Novo', 'Usado', 'Recondicionado'];
             <input type="file" name="image" accept="image/*" class="input">
         </label>
 
-        <label>… ou colar o endereço (URL) de uma imagem
+        <label>… ou colar o endereço (URL) da imagem principal
             <input type="url" name="image_url" class="input" placeholder="https://…/foto.jpg"
                    value="<?= (isset($produto['image']) && isRemoteImage($produto['image'])) ? e($produto['image']) : '' ?>">
             <span class="muted small">Útil para imagens de licença livre. Se carregar um ficheiro acima, este campo é ignorado.</span>
+        </label>
+
+        <label>Imagem 2 (Opcional)
+            <?php if ($isEdit && !empty($produto['image2'])): ?>
+                <span class="current-image">
+                    <img src="<?= e(uploadUrl($produto['image2'])) ?>" alt="">
+                    <span class="muted small">Imagem atual. Carregue uma nova (ou cole um URL) para substituir.</span>
+                </span>
+            <?php endif; ?>
+            <input type="file" name="image2" accept="image/*" class="input">
+        </label>
+
+        <label>… ou colar o endereço (URL) da imagem 2
+            <input type="url" name="image_url2" class="input" placeholder="https://…/foto.jpg"
+                   value="<?= (isset($produto['image2']) && isRemoteImage($produto['image2'])) ? e($produto['image2']) : '' ?>">
+        </label>
+
+        <label>Imagem 3 (Opcional)
+            <?php if ($isEdit && !empty($produto['image3'])): ?>
+                <span class="current-image">
+                    <img src="<?= e(uploadUrl($produto['image3'])) ?>" alt="">
+                    <span class="muted small">Imagem atual. Carregue uma nova (ou cole um URL) para substituir.</span>
+                </span>
+            <?php endif; ?>
+            <input type="file" name="image3" accept="image/*" class="input">
+        </label>
+
+        <label>… ou colar o endereço (URL) da imagem 3
+            <input type="url" name="image_url3" class="input" placeholder="https://…/foto.jpg"
+                   value="<?= (isset($produto['image3']) && isRemoteImage($produto['image3'])) ? e($produto['image3']) : '' ?>">
+        </label>
+
+        <label>Imagem 4 (Opcional)
+            <?php if ($isEdit && !empty($produto['image4'])): ?>
+                <span class="current-image">
+                    <img src="<?= e(uploadUrl($produto['image4'])) ?>" alt="">
+                    <span class="muted small">Imagem atual. Carregue uma nova (ou cole um URL) para substituir.</span>
+                </span>
+            <?php endif; ?>
+            <input type="file" name="image4" accept="image/*" class="input">
+        </label>
+
+        <label>… ou colar o endereço (URL) da imagem 4
+            <input type="url" name="image_url4" class="input" placeholder="https://…/foto.jpg"
+                   value="<?= (isset($produto['image4']) && isRemoteImage($produto['image4'])) ? e($produto['image4']) : '' ?>">
         </label>
 
         <div class="form-checks">

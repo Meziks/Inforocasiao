@@ -21,6 +21,20 @@
                     </div>
                 </div>
             <?php endif; ?>
+
+            <?php if (!empty($produto['image2']) || !empty($produto['image3']) || !empty($produto['image4'])): ?>
+                <div class="detail-thumbnails">
+                    <?php if (!empty($produto['image2'])): ?>
+                        <img src="<?= e(uploadUrl($produto['image2'])) ?>" alt="<?= e($produto['name']) ?> - 2">
+                    <?php endif; ?>
+                    <?php if (!empty($produto['image3'])): ?>
+                        <img src="<?= e(uploadUrl($produto['image3'])) ?>" alt="<?= e($produto['name']) ?> - 3">
+                    <?php endif; ?>
+                    <?php if (!empty($produto['image4'])): ?>
+                        <img src="<?= e(uploadUrl($produto['image4'])) ?>" alt="<?= e($produto['name']) ?> - 4">
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </div>
         <div class="detail-info">
             <?php if (!empty($produto['category_name'])): ?>

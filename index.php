@@ -275,29 +275,90 @@ function saveProduct(?int $id): void
         }
     }
 
+    $imageName2 = null;
+    if (!empty($_FILES['image2']['name']) && $_FILES['image2']['error'] === UPLOAD_ERR_OK) {
+        $imageName2 = handleImageUpload($_FILES['image2']);
+    } elseif (!empty($_POST['image_url2'])) {
+        $urlIn = trim((string) $_POST['image_url2']);
+        if (preg_match('#^https?://#i', $urlIn)) {
+            $imageName2 = $urlIn;
+        } else {
+            flash('error', 'O URL da imagem 2 deve começar por http:// ou https://');
+        }
+    }
+
+    $imageName3 = null;
+    if (!empty($_FILES['image3']['name']) && $_FILES['image3']['error'] === UPLOAD_ERR_OK) {
+        $imageName3 = handleImageUpload($_FILES['image3']);
+    } elseif (!empty($_POST['image_url3'])) {
+        $urlIn = trim((string) $_POST['image_url3']);
+        if (preg_match('#^https?://#i', $urlIn)) {
+            $imageName3 = $urlIn;
+        } else {
+            flash('error', 'O URL da imagem 3 deve começar por http:// ou https://');
+        }
+    }
+
+    $imageName4 = null;
+    if (!empty($_FILES['image4']['name']) && $_FILES['image4']['error'] === UPLOAD_ERR_OK) {
+        $imageName4 = handleImageUpload($_FILES['image4']);
+    } elseif (!empty($_POST['image_url4'])) {
+        $urlIn = trim((string) $_POST['image_url4']);
+        if (preg_match('#^https?://#i', $urlIn)) {
+            $imageName4 = $urlIn;
+        } else {
+            flash('error', 'O URL da imagem 4 deve começar por http:// ou https://');
+        }
+    }
+
     if ($id === null) {
         Database::run(
             "INSERT INTO products
-             (name, brand, category_id, price, stock, `condition`, description, image, is_active, is_featured, created_at, updated_at)
-             VALUES (?,?,?,?,?,?,?,?,?,?,NOW(),NOW())",
-            [$name, $brand, $categoryId, $price, $stock, $condition, $description, $imageName, $isActive, $isFeatured]
+             (name, brand, category_id, price, stock, `condition`, description, image, image2, image3, image4, is_active, is_featured, created_at, updated_at)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())",
+            [$name, $brand, $categoryId, $price, $stock, $condition, $description, $imageName, $imageName2, $imageName3, $imageName4, $isActive, $isFeatured]
         );
         flash('success', 'Artigo criado com sucesso.');
     } else {
         // Se enviou nova imagem, apaga a antiga
-        if ($imageName !== null) {
-            $old = Database::one("SELECT image FROM products WHERE id = ?", [$id]);
-            if ($old && $old['image'] && !isRemoteImage($old['image'])) {
+        if ($imageName !== null || $imageName2 !== null || $imageName3 !== null || $imageName4 !== null) {
+            $old = Database::one("SELECT image, image2, image3, image4 FROM products WHERE id = ?", [$id]);
+
+            if ($imageName !== null && $old && $old['image'] && !isRemoteImage($old['image'])) {
                 @unlink(BASE_PATH . '/uploads/' . $old['image']);
             }
+            if ($imageName2 !== null && $old && $old['image2'] && !isRemoteImage($old['image2'])) {
+                @unlink(BASE_PATH . '/uploads/' . $old['image2']);
+            }
+            if ($imageName3 !== null && $old && $old['image3'] && !isRemoteImage($old['image3'])) {
+                @unlink(BASE_PATH . '/uploads/' . $old['image3']);
+            }
+            if ($imageName4 !== null && $old && $old['image4'] && !isRemoteImage($old['image4'])) {
+                @unlink(BASE_PATH . '/uploads/' . $old['image4']);
+            }
         }
+
         $sql = "UPDATE products SET name=?, brand=?, category_id=?, price=?, stock=?,
                 `condition`=?, description=?, is_active=?, is_featured=?, updated_at=NOW()";
         $params = [$name, $brand, $categoryId, $price, $stock, $condition, $description, $isActive, $isFeatured];
+
         if ($imageName !== null) {
             $sql .= ", image=?";
             $params[] = $imageName;
         }
+        if ($imageName2 !== null) {
+            $sql .= ", image2=?";
+            $params[] = $imageName2;
+        }
+        if ($imageName3 !== null) {
+            $sql .= ", image3=?";
+            $params[] = $imageName3;
+        }
+        if ($imageName4 !== null) {
+            $sql .= ", image4=?";
+            $params[] = $imageName4;
+        }
+
         $sql .= " WHERE id=?";
         $params[] = $id;
         Database::run($sql, $params);
