@@ -315,7 +315,7 @@ function saveProduct(?int $id): void
         Database::run(
             "INSERT INTO products
              (name, brand, category_id, price, stock, `condition`, description, image, image2, image3, image4, is_active, is_featured, created_at, updated_at)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())",
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())",
             [$name, $brand, $categoryId, $price, $stock, $condition, $description, $imageName, $imageName2, $imageName3, $imageName4, $isActive, $isFeatured]
         );
         flash('success', 'Artigo criado com sucesso.');
