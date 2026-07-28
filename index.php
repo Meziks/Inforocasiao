@@ -71,6 +71,14 @@ try {
                 render('404', ['title' => 'Não encontrado']);
                 break;
             }
+            $extraImages = Database::all(
+                "SELECT image FROM product_images WHERE product_id = ? ORDER BY sort_order",
+                [$produto['id']]
+            );
+            $galeria = array_values(array_filter(array_merge(
+                [$produto['image']],
+                array_column($extraImages, 'image')
+            )));
             $pDesc = trim((string) ($produto['description'] ?? ''));
             if ($pDesc === '') {
                 $pDesc = sprintf(
@@ -85,7 +93,7 @@ try {
                 'description' => mb_strimwidth($pDesc, 0, 160, '…'),
                 'canonical'   => '/produto/' . $produto['id'],
                 'jsonld'      => [
-                    Seo::productJsonLd($produto),
+                    Seo::productJsonLd($produto, $galeria),
                     Seo::breadcrumbJsonLd([
                         ['Início', '/'],
                         ['Produtos', '/produtos'],
@@ -93,7 +101,7 @@ try {
                     ]),
                 ],
             ]);
-            render('product', ['produto' => $produto, 'title' => $produto['name']]);
+            render('product', ['produto' => $produto, 'galeria' => $galeria, 'title' => $produto['name']]);
             break;
 
         case $path === '/servicos' && $method === 'GET':
@@ -184,7 +192,7 @@ try {
             Auth::requireLogin();
             $categorias = Database::all("SELECT * FROM categories ORDER BY name");
             render('admin/product_form', [
-                'produto' => null, 'categorias' => $categorias, 'title' => 'Novo artigo',
+                'produto' => null, 'categorias' => $categorias, 'extraImages' => [], 'title' => 'Novo artigo',
             ], 'layout_admin');
             break;
 
@@ -199,8 +207,18 @@ try {
             $produto = Database::one("SELECT * FROM products WHERE id = ?", [(int) $m[1]]);
             if (!$produto) { http_response_code(404); render('404', ['title' => '404'], 'layout_admin'); break; }
             $categorias = Database::all("SELECT * FROM categories ORDER BY name");
+            // Imagens extra (slots 2-4), indexadas por sort_order (1,2,3)
+            $extra = Database::all(
+                "SELECT sort_order, image FROM product_images WHERE product_id = ? ORDER BY sort_order",
+                [$produto['id']]
+            );
+            $extraImages = [];
+            foreach ($extra as $row) {
+                $extraImages[(int) $row['sort_order']] = $row['image'];
+            }
             render('admin/product_form', [
-                'produto' => $produto, 'categorias' => $categorias, 'title' => 'Editar artigo',
+                'produto' => $produto, 'categorias' => $categorias, 'extraImages' => $extraImages,
+                'title' => 'Editar artigo',
             ], 'layout_admin');
             break;
 
@@ -214,9 +232,15 @@ try {
             Auth::requireLogin();
             csrf_verify();
             $produto = Database::one("SELECT image FROM products WHERE id = ?", [(int) $m[1]]);
-            Database::run("DELETE FROM products WHERE id = ?", [(int) $m[1]]);
+            $extraDel = Database::all("SELECT image FROM product_images WHERE product_id = ?", [(int) $m[1]]);
+            Database::run("DELETE FROM products WHERE id = ?", [(int) $m[1]]); // product_images cai em cascata
             if ($produto && $produto['image'] && !isRemoteImage($produto['image'])) {
                 @unlink(BASE_PATH . '/uploads/' . $produto['image']);
+            }
+            foreach ($extraDel as $row) {
+                if ($row['image'] && !isRemoteImage($row['image'])) {
+                    @unlink(BASE_PATH . '/uploads/' . $row['image']);
+                }
             }
             flash('success', 'Artigo apagado.');
             redirect('/admin/dashboard');
@@ -262,18 +286,8 @@ function saveProduct(?int $id): void
         redirect($id ? "/admin/produtos/$id/editar" : '/admin/produtos/novo');
     }
 
-    // Imagem: ficheiro carregado tem prioridade; senão, URL colado (opcional)
-    $imageName = null;
-    if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $imageName = handleImageUpload($_FILES['image']);
-    } elseif (!empty($_POST['image_url'])) {
-        $urlIn = trim((string) $_POST['image_url']);
-        if (preg_match('#^https?://#i', $urlIn)) {
-            $imageName = $urlIn;
-        } else {
-            flash('error', 'O URL da imagem deve começar por http:// ou https://');
-        }
-    }
+    // Imagem principal (slot 1): ficheiro carregado tem prioridade; senão, URL colado (opcional)
+    $imageName = resolveImageSlot('image', 'image_url');
 
     if ($id === null) {
         Database::run(
@@ -282,9 +296,10 @@ function saveProduct(?int $id): void
              VALUES (?,?,?,?,?,?,?,?,?,?,NOW(),NOW())",
             [$name, $brand, $categoryId, $price, $stock, $condition, $description, $imageName, $isActive, $isFeatured]
         );
+        $id = (int) Database::pdo()->lastInsertId();
         flash('success', 'Artigo criado com sucesso.');
     } else {
-        // Se enviou nova imagem, apaga a antiga
+        // Se enviou nova imagem principal, apaga a antiga
         if ($imageName !== null) {
             $old = Database::one("SELECT image FROM products WHERE id = ?", [$id]);
             if ($old && $old['image'] && !isRemoteImage($old['image'])) {
@@ -303,7 +318,74 @@ function saveProduct(?int $id): void
         Database::run($sql, $params);
         flash('success', 'Artigo atualizado com sucesso.');
     }
+
+    saveExtraImageSlots($id);
     redirect('/admin/dashboard');
+}
+
+/**
+ * Guarda as imagens extra (slots 2 a 4) de um produto em product_images.
+ * Cada slot pode: receber uma imagem nova (ficheiro ou URL), ser removido
+ * (checkbox "remove"), ou ficar como está (nada enviado nesse slot).
+ */
+function saveExtraImageSlots(int $productId): void
+{
+    $current = Database::all(
+        "SELECT sort_order, image FROM product_images WHERE product_id = ?",
+        [$productId]
+    );
+    $byOrder = [];
+    foreach ($current as $row) {
+        $byOrder[(int) $row['sort_order']] = $row['image'];
+    }
+
+    for ($slot = 2; $slot <= 4; $slot++) {
+        $sortOrder = $slot - 1;
+        $existing  = $byOrder[$sortOrder] ?? null;
+
+        if (!empty($_POST["image{$slot}_remove"])) {
+            if ($existing !== null) {
+                Database::run(
+                    "DELETE FROM product_images WHERE product_id = ? AND sort_order = ?",
+                    [$productId, $sortOrder]
+                );
+                if (!isRemoteImage($existing)) {
+                    @unlink(BASE_PATH . '/uploads/' . $existing);
+                }
+            }
+            continue;
+        }
+
+        $newImage = resolveImageSlot("image{$slot}", "image{$slot}_url");
+        if ($newImage === null) {
+            continue; // nada enviado neste slot: mantém o que já lá está
+        }
+
+        if ($existing !== null && !isRemoteImage($existing)) {
+            @unlink(BASE_PATH . '/uploads/' . $existing);
+        }
+        Database::run(
+            "INSERT INTO product_images (product_id, image, sort_order) VALUES (?,?,?)
+             ON DUPLICATE KEY UPDATE image = VALUES(image)",
+            [$productId, $newImage, $sortOrder]
+        );
+    }
+}
+
+/** Resolve um slot de imagem: ficheiro carregado tem prioridade sobre URL colado. */
+function resolveImageSlot(string $fileKey, string $urlKey): ?string
+{
+    if (!empty($_FILES[$fileKey]['name']) && $_FILES[$fileKey]['error'] === UPLOAD_ERR_OK) {
+        return handleImageUpload($_FILES[$fileKey]);
+    }
+    if (!empty($_POST[$urlKey])) {
+        $urlIn = trim((string) $_POST[$urlKey]);
+        if (preg_match('#^https?://#i', $urlIn)) {
+            return $urlIn;
+        }
+        flash('error', 'O URL da imagem deve começar por http:// ou https://');
+    }
+    return null;
 }
 
 /** Valida e guarda uma imagem carregada. Devolve o nome do ficheiro. */

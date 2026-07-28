@@ -55,21 +55,38 @@ $conditions = ['Novo', 'Usado', 'Recondicionado'];
             <textarea name="description" rows="5" class="input" placeholder="Características, estado, garantia…"><?= $val('description') ?></textarea>
         </label>
 
-        <label>Imagem
-            <?php if ($isEdit && !empty($produto['image'])): ?>
-                <span class="current-image">
-                    <img src="<?= e(uploadUrl($produto['image'])) ?>" alt="">
-                    <span class="muted small">Imagem atual. Carregue uma nova (ou cole um URL) para substituir.</span>
-                </span>
-            <?php endif; ?>
-            <input type="file" name="image" accept="image/*" class="input">
-        </label>
-
-        <label>… ou colar o endereço (URL) de uma imagem
-            <input type="url" name="image_url" class="input" placeholder="https://…/foto.jpg"
-                   value="<?= (isset($produto['image']) && isRemoteImage($produto['image'])) ? e($produto['image']) : '' ?>">
-            <span class="muted small">Útil para imagens de licença livre. Se carregar um ficheiro acima, este campo é ignorado.</span>
-        </label>
+        <div class="image-slots">
+            <p class="field-label">Fotografias (até 4)</p>
+            <div class="image-slots-grid">
+                <?php
+                $extraImages = $extraImages ?? [];
+                for ($slot = 1; $slot <= 4; $slot++):
+                    $isMain   = $slot === 1;
+                    $current  = $isMain ? ($produto['image'] ?? null) : ($extraImages[$slot - 1] ?? null);
+                    $urlKey   = $isMain ? 'image_url' : "image{$slot}_url";
+                    $fileKey  = $isMain ? 'image' : "image{$slot}";
+                    $curUrlVal = ($current && isRemoteImage($current)) ? $current : '';
+                ?>
+                <div class="image-slot">
+                    <span class="image-slot-label"><?= $isMain ? 'Imagem principal' : "Imagem $slot" ?></span>
+                    <?php if ($current): ?>
+                        <div class="image-slot-preview">
+                            <img src="<?= e(uploadUrl($current)) ?>" alt="">
+                            <?php if (!$isMain): ?>
+                                <label class="check check-remove">
+                                    <input type="checkbox" name="image<?= $slot ?>_remove" value="1"> Remover
+                                </label>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                    <input type="file" name="<?= e($fileKey) ?>" accept="image/*" class="input input-file">
+                    <input type="url" name="<?= e($urlKey) ?>" class="input" placeholder="…ou cole um URL de imagem"
+                           value="<?= e($curUrlVal) ?>">
+                </div>
+                <?php endfor; ?>
+            </div>
+            <span class="muted small">Pode carregar um ficheiro ou colar um URL (útil para imagens de licença livre).</span>
+        </div>
 
         <div class="form-checks">
             <label class="check"><input type="checkbox" name="is_active" value="1" <?= ($produto['is_active'] ?? 1) ? 'checked' : '' ?>> Visível no site</label>

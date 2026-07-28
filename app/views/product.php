@@ -9,9 +9,22 @@
     </nav>
 
     <div class="product-detail">
-        <div class="detail-media">
-            <?php if (!empty($produto['image'])): ?>
-                <img src="<?= e(uploadUrl($produto['image'])) ?>" alt="<?= e($produto['name']) ?>">
+        <?php $galeria = $galeria ?? []; ?>
+        <div class="detail-media" id="product-gallery">
+            <?php if (!empty($galeria)): ?>
+                <div class="detail-media-main">
+                    <img id="gallery-main" src="<?= e(uploadUrl($galeria[0])) ?>" alt="<?= e($produto['name']) ?>">
+                </div>
+                <?php if (count($galeria) > 1): ?>
+                    <div class="detail-thumbs">
+                        <?php foreach ($galeria as $i => $img): ?>
+                            <button type="button" class="detail-thumb <?= $i === 0 ? 'active' : '' ?>"
+                                    data-src="<?= e(uploadUrl($img)) ?>" aria-label="Ver imagem <?= $i + 1 ?>">
+                                <img src="<?= e(uploadUrl($img)) ?>" alt="">
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             <?php else: ?>
                 <div class="thumb-gen large">
                     <span class="thumb-gen-mark"><?= e($produto['brand'] ?: 'inforocasião') ?></span>

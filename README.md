@@ -3,7 +3,7 @@
 Site da loja **Inforocasião** (computadores, telemóveis, componentes electrónicos e reparações), com:
 
 - **Site público** apelativo: página inicial, montra de produtos com pesquisa e filtros por categoria, página de produto, serviços/reparações e contactos.
-- **Área de gestão** (`/admin`) com login, onde o gerente adiciona, edita e apaga artigos (com fotografia, preço, stock, categoria e condição: novo / usado / recondicionado).
+- **Área de gestão** (`/admin`) com login, onde o gerente adiciona, edita e apaga artigos (com até 4 fotografias, preço, stock, categoria e condição: novo / usado / recondicionado).
 - **Base de dados** MySQL gerida por **migrations** (versionadas no Git).
 - **Deploy automático** cPanel ↔ GitHub via `.cpanel.yml`.
 

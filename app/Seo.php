@@ -131,8 +131,8 @@ final class Seo
         ];
     }
 
-    /** JSON-LD de um produto. */
-    public static function productJsonLd(array $p): array
+    /** JSON-LD de um produto. $gallery = todas as fotos (principal + extras), se houver. */
+    public static function productJsonLd(array $p, array $gallery = []): array
     {
         $availability = ((int) ($p['stock'] ?? 0) > 0)
             ? 'https://schema.org/InStock'
@@ -141,16 +141,19 @@ final class Seo
             ? 'https://schema.org/NewCondition'
             : 'https://schema.org/RefurbishedCondition';
 
-        $image = !empty($p['image']) ? uploadUrl($p['image']) : self::abs('assets/img/og-image.png');
-        if (!preg_match('#^https?://#i', $image)) {
-            $image = self::origin() . $image;
-        }
+        $toAbs = function (string $img): string {
+            $img = uploadUrl($img);
+            return preg_match('#^https?://#i', $img) === 1 ? $img : self::origin() . $img;
+        };
+
+        $images = !empty($gallery) ? array_map($toAbs, $gallery)
+            : (!empty($p['image']) ? [$toAbs($p['image'])] : [self::abs('assets/img/og-image.png')]);
 
         $data = [
             '@context' => 'https://schema.org',
             '@type'    => 'Product',
             'name'     => $p['name'],
-            'image'    => $image,
+            'image'    => count($images) === 1 ? $images[0] : $images,
             'sku'      => 'IO-' . ($p['id'] ?? ''),
             'category' => $p['category_name'] ?? null,
             'itemCondition' => $condition,
