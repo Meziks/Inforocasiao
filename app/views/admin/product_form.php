@@ -73,35 +73,37 @@ $conditions = ['Novo', 'Usado', 'Recondicionado'];
                 <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.3 9 5.2M3.3 7.5 12 12.5l8.7-5M12 22V12.5"/><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/></svg>
                 Fotografias
             </h3>
-            <div class="image-slots-grid">
-                <?php
-                $extraImages = $extraImages ?? [];
-                for ($slot = 1; $slot <= 4; $slot++):
-                    $isMain    = $slot === 1;
-                    $current   = $isMain ? ($produto['image'] ?? null) : ($extraImages[$slot - 1] ?? null);
-                    $urlKey    = $isMain ? 'image_url' : "image_url{$slot}";
-                    $fileKey   = $isMain ? 'image' : "image{$slot}";
-                    $curUrlVal = ($current && isRemoteImage($current)) ? $current : '';
-                ?>
-                <div class="image-slot">
-                    <span class="image-slot-label"><?= $isMain ? 'Principal' : "Imagem $slot" ?></span>
-                    <?php if ($current): ?>
-                        <div class="image-slot-preview">
-                            <img src="<?= e(uploadUrl($current)) ?>" alt="">
-                            <?php if (!$isMain): ?>
-                                <label class="check check-remove">
-                                    <input type="checkbox" name="image<?= $slot ?>_remove" value="1"> Remover
-                                </label>
-                            <?php endif; ?>
+            <div class="image-manager" id="image-manager" data-max="4">
+                <div class="image-manager-list" id="image-manager-list">
+                    <?php $currentImages = $currentImages ?? []; ?>
+                    <?php foreach ($currentImages as $img): ?>
+                        <?php if (!$img) continue; ?>
+                        <div class="image-card">
+                            <img src="<?= e(uploadUrl($img)) ?>" class="image-card-thumb" alt="">
+                            <span class="image-card-badge"></span>
+                            <div class="image-card-actions">
+                                <button type="button" class="image-card-btn" data-action="up" aria-label="Mover para cima">↑</button>
+                                <button type="button" class="image-card-btn" data-action="down" aria-label="Mover para baixo">↓</button>
+                                <button type="button" class="image-card-btn image-card-btn-danger" data-action="remove" aria-label="Remover imagem">✕</button>
+                            </div>
+                            <input type="hidden" name="existing_images[]" value="<?= e($img) ?>">
                         </div>
-                    <?php endif; ?>
-                    <input type="file" name="<?= e($fileKey) ?>" accept="image/*" class="input input-file">
-                    <input type="url" name="<?= e($urlKey) ?>" class="input" placeholder="…ou cole um URL"
-                           value="<?= e($curUrlVal) ?>">
+                    <?php endforeach; ?>
                 </div>
-                <?php endfor; ?>
+                <input type="hidden" name="image_order" id="image-order-input" value="">
+                <div class="image-manager-add">
+                    <label class="btn btn-outline btn-file-upload">
+                        Carregar imagens…
+                        <input type="file" name="images[]" id="image-file-input" accept="image/*" multiple>
+                    </label>
+                    <div class="image-url-add">
+                        <input type="url" class="input" id="image-url-input" placeholder="…ou cole um URL de imagem">
+                        <button type="button" class="btn btn-outline" id="image-url-add-btn">Adicionar</button>
+                    </div>
+                </div>
+                <p class="muted small image-manager-hint">Pode escolher várias imagens de uma vez (máximo 4). Use as setas para as ordenar — a primeira é a imagem principal do artigo.</p>
+                <p class="image-manager-warning" id="image-manager-warning" hidden></p>
             </div>
-            <span class="muted small">Pode carregar um ficheiro ou colar um URL (útil para imagens de licença livre).</span>
         </div>
 
         <div class="form-section form-section-last">

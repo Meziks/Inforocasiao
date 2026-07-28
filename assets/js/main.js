@@ -23,26 +23,178 @@
         });
     });
 
-    // Pré-visualização da imagem escolhida em cada slot do formulário de artigo
-    document.addEventListener("change", function (e) {
-        if (e.target && e.target.matches('.image-slot input[type="file"]')) {
-            var input = e.target;
-            if (!input.files || !input.files[0]) return;
-            var wrap = input.closest(".image-slot");
-            if (!wrap) return;
-            var existing = wrap.querySelector(".file-preview");
-            var url = URL.createObjectURL(input.files[0]);
-            if (existing) {
-                existing.src = url;
-            } else {
-                var img = document.createElement("img");
-                img.className = "file-preview";
-                img.src = url;
-                img.style.cssText = "width:56px;height:56px;object-fit:cover;border-radius:8px;margin-bottom:6px;border:1px solid #e6e8ef;";
-                wrap.insertBefore(img, input);
-            }
+    // Gestor de imagens do formulário de artigo: upload múltiplo, URLs e
+    // reordenação (a primeira imagem da lista é sempre a imagem principal).
+    (function () {
+        var manager = document.getElementById("image-manager");
+        if (!manager) return;
+
+        var list       = document.getElementById("image-manager-list");
+        var orderInput = document.getElementById("image-order-input");
+        var fileInput  = document.getElementById("image-file-input");
+        var urlInput   = document.getElementById("image-url-input");
+        var urlAddBtn  = document.getElementById("image-url-add-btn");
+        var warning    = document.getElementById("image-manager-warning");
+        var maxImages  = parseInt(manager.getAttribute("data-max"), 10) || 4;
+
+        // Estado inicial: imagens já existentes, lidas do HTML gerado pelo servidor.
+        var items = Array.prototype.map.call(list.querySelectorAll(".image-card"), function (el) {
+            var hidden = el.querySelector('input[name="existing_images[]"]');
+            var img = el.querySelector(".image-card-thumb");
+            return { type: "existing", value: hidden ? hidden.value : "", previewSrc: img ? img.src : "" };
+        });
+
+        function showWarning(msg) {
+            if (!warning) return;
+            warning.textContent = msg || "";
+            warning.hidden = !msg;
         }
-    });
+
+        function buildCard(item, index, total) {
+            var card = document.createElement("div");
+            card.className = "image-card";
+
+            var img = document.createElement("img");
+            img.className = "image-card-thumb";
+            img.src = item.previewSrc || "";
+            img.alt = "";
+            card.appendChild(img);
+
+            var badge = document.createElement("span");
+            badge.className = "image-card-badge";
+            badge.textContent = index === 0 ? "Principal" : String(index + 1);
+            card.appendChild(badge);
+
+            var actions = document.createElement("div");
+            actions.className = "image-card-actions";
+
+            var up = document.createElement("button");
+            up.type = "button";
+            up.className = "image-card-btn";
+            up.setAttribute("data-action", "up");
+            up.setAttribute("aria-label", "Mover para cima");
+            up.textContent = "↑";
+            if (index === 0) up.disabled = true;
+            actions.appendChild(up);
+
+            var down = document.createElement("button");
+            down.type = "button";
+            down.className = "image-card-btn";
+            down.setAttribute("data-action", "down");
+            down.setAttribute("aria-label", "Mover para baixo");
+            down.textContent = "↓";
+            if (index === total - 1) down.disabled = true;
+            actions.appendChild(down);
+
+            var remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "image-card-btn image-card-btn-danger";
+            remove.setAttribute("data-action", "remove");
+            remove.setAttribute("aria-label", "Remover imagem");
+            remove.textContent = "✕";
+            actions.appendChild(remove);
+
+            card.appendChild(actions);
+
+            if (item.type === "existing") {
+                var hidden = document.createElement("input");
+                hidden.type = "hidden";
+                hidden.name = "existing_images[]";
+                hidden.value = item.value;
+                card.appendChild(hidden);
+            } else if (item.type === "new" && item.kind === "url") {
+                var hiddenUrl = document.createElement("input");
+                hiddenUrl.type = "hidden";
+                hiddenUrl.name = "new_urls[]";
+                hiddenUrl.value = item.value;
+                card.appendChild(hiddenUrl);
+            }
+
+            return card;
+        }
+
+        function syncFileInput() {
+            if (typeof DataTransfer === "undefined") return;
+            var dt = new DataTransfer();
+            items.forEach(function (item) {
+                if (item.type === "new" && item.kind === "file") dt.items.add(item.file);
+            });
+            fileInput.files = dt.files;
+        }
+
+        function syncOrderField() {
+            orderInput.value = items.map(function (item) {
+                if (item.type === "existing") return "e";
+                return item.kind === "url" ? "u" : "n";
+            }).join(",");
+        }
+
+        function updateAddControlsState() {
+            var atMax = items.length >= maxImages;
+            fileInput.disabled = atMax;
+            urlInput.disabled = atMax;
+            urlAddBtn.disabled = atMax;
+            manager.classList.toggle("image-manager-max", atMax);
+        }
+
+        function render() {
+            list.innerHTML = "";
+            items.forEach(function (item, i) {
+                list.appendChild(buildCard(item, i, items.length));
+            });
+            syncFileInput();
+            syncOrderField();
+            updateAddControlsState();
+        }
+
+        list.addEventListener("click", function (e) {
+            var btn = e.target.closest(".image-card-btn");
+            if (!btn || btn.disabled) return;
+            var card = btn.closest(".image-card");
+            var index = Array.prototype.indexOf.call(list.children, card);
+            if (index === -1) return;
+            var action = btn.getAttribute("data-action");
+            if (action === "remove") {
+                items.splice(index, 1);
+                showWarning("");
+            } else if (action === "up" && index > 0) {
+                var tmp = items[index - 1]; items[index - 1] = items[index]; items[index] = tmp;
+            } else if (action === "down" && index < items.length - 1) {
+                var tmp2 = items[index + 1]; items[index + 1] = items[index]; items[index] = tmp2;
+            }
+            render();
+        });
+
+        fileInput.addEventListener("change", function () {
+            var picked = Array.prototype.slice.call(fileInput.files || []);
+            var overflow = false;
+            picked.forEach(function (file) {
+                if (items.length >= maxImages) { overflow = true; return; }
+                items.push({ type: "new", kind: "file", file: file, previewSrc: URL.createObjectURL(file) });
+            });
+            showWarning(overflow ? "Só pode ter até " + maxImages + " imagens por artigo." : "");
+            render();
+        });
+
+        urlAddBtn.addEventListener("click", function () {
+            var val = (urlInput.value || "").trim();
+            if (!val) return;
+            if (!/^https?:\/\//i.test(val)) {
+                showWarning("O URL da imagem deve começar por http:// ou https://");
+                return;
+            }
+            if (items.length >= maxImages) {
+                showWarning("Só pode ter até " + maxImages + " imagens por artigo.");
+                return;
+            }
+            items.push({ type: "new", kind: "url", value: val, previewSrc: val });
+            urlInput.value = "";
+            showWarning("");
+            render();
+        });
+
+        render();
+    })();
 
     // Ficha de produto: trocar a imagem principal ao clicar numa miniatura
     var currentGalleryIndex = 0;

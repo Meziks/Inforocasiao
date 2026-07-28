@@ -234,7 +234,7 @@ try {
             Auth::requireLogin();
             $categorias = Database::all("SELECT * FROM categories ORDER BY name");
             render('admin/product_form', [
-                'produto' => null, 'categorias' => $categorias, 'extraImages' => [], 'title' => 'Novo artigo',
+                'produto' => null, 'categorias' => $categorias, 'currentImages' => [], 'title' => 'Novo artigo',
             ], 'layout_admin');
             break;
 
@@ -249,13 +249,16 @@ try {
             $produto = Database::one("SELECT * FROM products WHERE id = ?", [(int) $m[1]]);
             if (!$produto) { http_response_code(404); render('404', ['title' => '404'], 'layout_admin'); break; }
             $categorias = Database::all("SELECT * FROM categories ORDER BY name");
-            // Imagens extra (slots 2-4), indexadas por sort_order (1,2,3)
-            $extraImages = [];
-            foreach (extraProductImages((int) $produto['id'], true) as $row) {
-                $extraImages[(int) $row['sort_order']] = $row['image'];
+            // Imagem principal + extras, pela ordem em que aparecem no artigo
+            $currentImages = [];
+            if (!empty($produto['image'])) {
+                $currentImages[] = $produto['image'];
+            }
+            foreach (extraProductImages((int) $produto['id']) as $row) {
+                $currentImages[] = $row['image'];
             }
             render('admin/product_form', [
-                'produto' => $produto, 'categorias' => $categorias, 'extraImages' => $extraImages,
+                'produto' => $produto, 'categorias' => $categorias, 'currentImages' => $currentImages,
                 'title' => 'Editar artigo',
             ], 'layout_admin');
             break;
@@ -325,89 +328,111 @@ function saveProduct(?int $id): void
         redirect($id ? "/admin/produtos/$id/editar" : '/admin/produtos/novo');
     }
 
-    // Imagem principal: ficheiro carregado tem prioridade; senão, URL colado (opcional)
-    $imageName = resolveImageSlot('image', 'image_url');
+    // Imagens antes de qualquer alteração, para saber depois quais os
+    // ficheiros locais que deixaram de estar em uso e podem ser apagados.
+    $previousImages = [];
+    if ($id !== null) {
+        $old = Database::one("SELECT image FROM products WHERE id = ?", [$id]);
+        if ($old && $old['image']) {
+            $previousImages[] = $old['image'];
+        }
+        foreach (extraProductImages($id) as $row) {
+            $previousImages[] = $row['image'];
+        }
+    }
+
+    // Imagens submetidas (upload múltiplo + URLs + já existentes), já pela
+    // ordem final escolhida no formulário; a primeira é a imagem principal.
+    $finalImages = collectSubmittedImages();
+    $mainImage   = $finalImages[0] ?? null;
 
     if ($id === null) {
         Database::run(
             "INSERT INTO products
              (name, brand, category_id, price, stock, `condition`, description, image, is_active, is_featured, created_at, updated_at)
              VALUES (?,?,?,?,?,?,?,?,?,?,NOW(),NOW())",
-            [$name, $brand, $categoryId, $price, $stock, $condition, $description, $imageName, $isActive, $isFeatured]
+            [$name, $brand, $categoryId, $price, $stock, $condition, $description, $mainImage, $isActive, $isFeatured]
         );
         $id = (int) Database::pdo()->lastInsertId();
         flash('success', 'Artigo criado com sucesso.');
     } else {
-        // Se enviou nova imagem principal, apaga a antiga
-        if ($imageName !== null) {
-            $old = Database::one("SELECT image FROM products WHERE id = ?", [$id]);
-            if ($old && $old['image'] && !isRemoteImage($old['image'])) {
-                @unlink(BASE_PATH . '/uploads/' . $old['image']);
-            }
-        }
-        $sql = "UPDATE products SET name=?, brand=?, category_id=?, price=?, stock=?,
-                `condition`=?, description=?, is_active=?, is_featured=?, updated_at=NOW()";
-        $params = [$name, $brand, $categoryId, $price, $stock, $condition, $description, $isActive, $isFeatured];
-        if ($imageName !== null) {
-            $sql .= ", image=?";
-            $params[] = $imageName;
-        }
-        $sql .= " WHERE id=?";
-        $params[] = $id;
-        Database::run($sql, $params);
+        Database::run(
+            "UPDATE products SET name=?, brand=?, category_id=?, price=?, stock=?,
+             `condition`=?, description=?, image=?, is_active=?, is_featured=?, updated_at=NOW()
+             WHERE id=?",
+            [$name, $brand, $categoryId, $price, $stock, $condition, $description, $mainImage, $isActive, $isFeatured, $id]
+        );
         flash('success', 'Artigo atualizado com sucesso.');
     }
 
-    saveExtraImageSlots($id);
+    applyExtraImages($id, array_slice($finalImages, 1));
+    removeUnusedImageFiles($previousImages, $finalImages);
     redirect('/admin/dashboard');
 }
 
 /**
- * Guarda as imagens extra (slots 2 a 4) de um produto em product_images.
- * Cada slot pode: receber uma imagem nova (ficheiro ou URL), ser removido
- * (checkbox "remove"), ou ficar como está (nada enviado nesse slot).
+ * Junta as imagens enviadas no formulário (já existentes mantidas + novos
+ * ficheiros carregados + novos URLs colados) na ordem final escolhida pelo
+ * utilizador, descrita em "image_order" (tokens "e"/"u"/"n" que apontam,
+ * por ordem de aparição, para existing_images[], new_urls[] e images[]).
+ * Limita sempre a 4 imagens por artigo (1 principal + 3 extra).
  */
-function saveExtraImageSlots(int $productId): void
+function collectSubmittedImages(): array
 {
-    $current = extraProductImages($productId, true);
-    $byOrder = [];
-    foreach ($current as $row) {
-        $byOrder[(int) $row['sort_order']] = $row['image'];
-    }
+    $order    = array_values(array_filter(explode(',', (string) ($_POST['image_order'] ?? ''))));
+    $existing = array_values(array_filter((array) ($_POST['existing_images'] ?? []), fn($v) => trim((string) $v) !== ''));
+    $urls     = array_values((array) ($_POST['new_urls'] ?? []));
+    $uploaded = handleImageUploads($_FILES['images'] ?? null);
 
-    for ($slot = 2; $slot <= 4; $slot++) {
-        $sortOrder = $slot - 1;
-        $existing  = $byOrder[$sortOrder] ?? null;
-
-        $newImage = resolveImageSlot("image{$slot}", "image_url{$slot}");
-        if ($newImage !== null) {
-            // Substituir: apaga o ficheiro antigo (se local) e grava o novo
-            if ($existing !== null && !isRemoteImage($existing)) {
-                @unlink(BASE_PATH . '/uploads/' . $existing);
-            }
-            Database::run(
-                "INSERT INTO product_images (product_id, image, sort_order) VALUES (?,?,?)
-                 ON DUPLICATE KEY UPDATE image = VALUES(image)",
-                [$productId, $newImage, $sortOrder]
-            );
-            continue;
-        }
-
-        if (!empty($_POST["image{$slot}_remove"])) {
-            // Remover: apaga a linha e o ficheiro (se local)
-            if ($existing !== null) {
-                Database::run(
-                    "DELETE FROM product_images WHERE product_id = ? AND sort_order = ?",
-                    [$productId, $sortOrder]
-                );
-                if (!isRemoteImage($existing)) {
-                    @unlink(BASE_PATH . '/uploads/' . $existing);
+    $final = [];
+    $ei = 0; $ui = 0; $ni = 0;
+    foreach ($order as $token) {
+        if ($token === 'e' && isset($existing[$ei])) {
+            $final[] = $existing[$ei];
+            $ei++;
+        } elseif ($token === 'u' && array_key_exists($ui, $urls)) {
+            $urlIn = trim((string) $urls[$ui]);
+            $ui++;
+            if ($urlIn !== '') {
+                if (preg_match('#^https?://#i', $urlIn)) {
+                    $final[] = $urlIn;
+                } else {
+                    flash('error', 'O URL da imagem deve começar por http:// ou https://');
                 }
             }
-            continue;
+        } elseif ($token === 'n' && array_key_exists($ni, $uploaded)) {
+            if ($uploaded[$ni] !== null) {
+                $final[] = $uploaded[$ni];
+            }
+            $ni++;
         }
+    }
 
-        // Nada enviado neste slot: mantém o que já lá está
+    return array_slice($final, 0, 4);
+}
+
+/**
+ * Substitui as imagens extra (2ª a 4ª) de um produto em product_images
+ * pela lista final indicada (já sem a imagem principal), na mesma ordem.
+ */
+function applyExtraImages(int $productId, array $extras): void
+{
+    Database::run("DELETE FROM product_images WHERE product_id = ?", [$productId]);
+    foreach (array_slice($extras, 0, 3) as $i => $image) {
+        Database::run(
+            "INSERT INTO product_images (product_id, image, sort_order) VALUES (?,?,?)",
+            [$productId, $image, $i + 1]
+        );
+    }
+}
+
+/** Apaga do disco os ficheiros locais que já não constam da lista final de imagens. */
+function removeUnusedImageFiles(array $previousImages, array $finalImages): void
+{
+    foreach (array_diff($previousImages, $finalImages) as $image) {
+        if ($image && !isRemoteImage($image)) {
+            @unlink(BASE_PATH . '/uploads/' . $image);
+        }
     }
 }
 
@@ -417,12 +442,11 @@ function saveExtraImageSlots(int $productId): void
  * que a migration está a ser aplicada no deploy), devolve [] em vez de
  * rebentar a página — a foto principal continua a aparecer na mesma.
  */
-function extraProductImages(int $productId, bool $withSortOrder = false): array
+function extraProductImages(int $productId): array
 {
     try {
-        $cols = $withSortOrder ? 'sort_order, image' : 'image';
         return Database::all(
-            "SELECT {$cols} FROM product_images WHERE product_id = ? ORDER BY sort_order",
+            "SELECT image FROM product_images WHERE product_id = ? ORDER BY sort_order",
             [$productId]
         );
     } catch (Throwable $e) {
@@ -431,20 +455,34 @@ function extraProductImages(int $productId, bool $withSortOrder = false): array
     }
 }
 
-/** Resolve um slot de imagem: ficheiro carregado tem prioridade sobre URL colado. */
-function resolveImageSlot(string $fileKey, string $urlKey): ?string
+/**
+ * Normaliza o array multi-ficheiro de $_FILES['images'] (upload múltiplo,
+ * name="images[]") numa lista de nomes de ficheiro guardados, na mesma
+ * ordem em que foram selecionados. Entradas inválidas/falhadas ficam a
+ * null (mas mantêm a posição, para não desalinhar a ordem final).
+ */
+function handleImageUploads(?array $filesEntry): array
 {
-    if (!empty($_FILES[$fileKey]['name']) && $_FILES[$fileKey]['error'] === UPLOAD_ERR_OK) {
-        return handleImageUpload($_FILES[$fileKey]);
+    if (!$filesEntry || empty($filesEntry['name'])) {
+        return [];
     }
-    if (!empty($_POST[$urlKey])) {
-        $urlIn = trim((string) $_POST[$urlKey]);
-        if (preg_match('#^https?://#i', $urlIn)) {
-            return $urlIn;
+    $names = (array) $filesEntry['name'];
+    $results = [];
+    foreach ($names as $i => $name) {
+        $single = [
+            'name'     => $name,
+            'type'     => $filesEntry['type'][$i] ?? '',
+            'tmp_name' => $filesEntry['tmp_name'][$i] ?? '',
+            'error'    => $filesEntry['error'][$i] ?? UPLOAD_ERR_NO_FILE,
+            'size'     => $filesEntry['size'][$i] ?? 0,
+        ];
+        if ($single['name'] === '' || $single['error'] !== UPLOAD_ERR_OK) {
+            $results[] = null;
+            continue;
         }
-        flash('error', 'O URL da imagem deve começar por http:// ou https://');
+        $results[] = handleImageUpload($single);
     }
-    return null;
+    return $results;
 }
 
 /** Valida e guarda uma imagem carregada. Devolve o nome do ficheiro. */
