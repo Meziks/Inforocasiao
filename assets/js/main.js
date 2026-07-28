@@ -130,8 +130,10 @@
         }
 
         function updateAddControlsState() {
+            // Nota: nunca desativar o fileInput ("disabled") — inputs de ficheiro
+            // desativados são excluídos do envio do formulário pelo browser, o que
+            // apagaria silenciosamente os ficheiros já escolhidos ao atingir o máximo.
             var atMax = items.length >= maxImages;
-            fileInput.disabled = atMax;
             urlInput.disabled = atMax;
             urlAddBtn.disabled = atMax;
             manager.classList.toggle("image-manager-max", atMax);
@@ -163,6 +165,13 @@
                 var tmp2 = items[index + 1]; items[index + 1] = items[index]; items[index] = tmp2;
             }
             render();
+        });
+
+        fileInput.addEventListener("click", function (e) {
+            if (items.length >= maxImages) {
+                e.preventDefault();
+                showWarning("Só pode ter até " + maxImages + " imagens por artigo.");
+            }
         });
 
         fileInput.addEventListener("change", function () {
