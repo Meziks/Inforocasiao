@@ -87,18 +87,58 @@
                                     <span class="tag tag-off">Oculto</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="cell-actions">
-                                <a href="<?= e(url('/admin/produtos/' . $p['id'] . '/editar')) ?>" class="btn btn-sm btn-outline">Editar</a>
-                                <form action="<?= e(url('/admin/produtos/' . $p['id'] . '/apagar')) ?>" method="post" class="inline-form"
-                                      onsubmit="return confirm('Apagar o artigo &quot;<?= e($p['name']) ?>&quot;? Esta ação não pode ser desfeita.');">
-                                    <?= csrf_field() ?>
-                                    <button type="submit" class="btn btn-sm btn-danger">Apagar</button>
-                                </form>
+                            <td>
+                                <div class="cell-actions">
+                                    <a href="<?= e(url('/admin/produtos/' . $p['id'] . '/editar')) ?>" class="btn btn-sm btn-outline">Editar</a>
+                                    <form action="<?= e(url('/admin/produtos/' . $p['id'] . '/apagar')) ?>" method="post" class="inline-form"
+                                          onsubmit="return confirm('Apagar o artigo &quot;<?= e($p['name']) ?>&quot;? Esta ação não pode ser desfeita.');">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="btn btn-sm btn-danger">Apagar</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
+        </div>
+
+        <div class="admin-cards">
+            <?php foreach ($produtos as $p): ?>
+                <div class="admin-card">
+                    <div class="admin-card-media">
+                        <?php if (!empty($p['image'])): ?>
+                            <img src="<?= e(uploadUrl($p['image'])) ?>" alt="">
+                        <?php else: ?>
+                            <span class="mini-placeholder"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#9298a6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.3 9 5.2M3.3 7.5 12 12.5l8.7-5M12 22V12.5"/><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/></svg></span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="admin-card-body">
+                        <a href="<?= e(url('/admin/produtos/' . $p['id'] . '/editar')) ?>" class="row-title"><?= e($p['name']) ?></a>
+                        <?php if (!empty($p['is_featured'])): ?><span class="tag tag-star">★ destaque</span><?php endif; ?>
+                        <p class="muted small admin-card-sub">
+                            <?= e($p['category_name'] ?? 'Sem categoria') ?><?php if (!empty($p['brand'])): ?> · <?= e($p['brand']) ?><?php endif; ?>
+                        </p>
+                        <div class="admin-card-meta">
+                            <span class="admin-card-price"><?= money($p['price']) ?></span>
+                            <span class="<?= (int) $p['stock'] === 0 ? 'stock-zero' : '' ?>">Stock: <?= (int) $p['stock'] ?></span>
+                            <?php if (!empty($p['is_active'])): ?>
+                                <span class="tag tag-on">Visível</span>
+                            <?php else: ?>
+                                <span class="tag tag-off">Oculto</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="admin-card-actions">
+                        <a href="<?= e(url('/admin/produtos/' . $p['id'] . '/editar')) ?>" class="btn btn-sm btn-outline">Editar</a>
+                        <form action="<?= e(url('/admin/produtos/' . $p['id'] . '/apagar')) ?>" method="post" class="inline-form"
+                              onsubmit="return confirm('Apagar o artigo &quot;<?= e($p['name']) ?>&quot;? Esta ação não pode ser desfeita.');">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn-sm btn-danger btn-block">Apagar</button>
+                        </form>
+                    </div>
+                </div>
+            <?php endforeach; ?>
         </div>
     <?php endif; ?>
 </section>
