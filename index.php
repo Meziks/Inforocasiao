@@ -290,6 +290,7 @@ try {
             render('404', ['title' => 'Página não encontrada']);
     }
 } catch (Throwable $ex) {
+    logError('Pedido: ' . $method . ' ' . $path, $ex);
     if (($GLOBALS['config']['app']['env'] ?? 'production') === 'development') {
         http_response_code(500);
         echo '<pre>' . e($ex->getMessage() . "\n" . $ex->getTraceAsString()) . '</pre>';
@@ -425,7 +426,7 @@ function extraProductImages(int $productId, bool $withSortOrder = false): array
             [$productId]
         );
     } catch (Throwable $e) {
-        error_log('extraProductImages: ' . $e->getMessage());
+        logError('extraProductImages', $e);
         return [];
     }
 }

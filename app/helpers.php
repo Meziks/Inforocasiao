@@ -36,6 +36,29 @@ function isRemoteImage(?string $file): bool
     return $file !== null && preg_match('#^https?://#i', $file) === 1;
 }
 
+/**
+ * Regista um erro num ficheiro dedicado (storage/app-error.log), protegido
+ * de acesso externo. Nunca deixa o registo interromper o pedido em curso.
+ */
+function logError(string $context, Throwable $ex): void
+{
+    $dir = BASE_PATH . '/storage';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+    }
+    $line = sprintf(
+        "[%s] %s: %s em %s:%d\n%s\n%s\n\n",
+        date('Y-m-d H:i:s'),
+        $context,
+        $ex->getMessage(),
+        $ex->getFile(),
+        $ex->getLine(),
+        $ex->getTraceAsString(),
+        str_repeat('-', 70)
+    );
+    @file_put_contents($dir . '/app-error.log', $line, FILE_APPEND | LOCK_EX);
+}
+
 /** Redireciona e termina a execução. */
 function redirect(string $path): never
 {
