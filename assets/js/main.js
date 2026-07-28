@@ -2,23 +2,25 @@
 (function () {
     "use strict";
 
-    // Menu mobile: abrir/fechar ao clicar no botão "☰"
+    // Menu mobile: abrir/fechar ao clicar no botão "☰" (site público e gestão)
     document.addEventListener("click", function (e) {
         var toggle = e.target.closest(".nav-toggle");
-        var nav = document.getElementById("main-nav");
-        if (!nav) return;
-
         if (toggle) {
+            var targetId = toggle.getAttribute("aria-controls");
+            var nav = targetId && document.getElementById(targetId);
+            if (!nav) return;
             var open = nav.classList.toggle("open");
             toggle.setAttribute("aria-expanded", open ? "true" : "false");
             return;
         }
-        // Fechar ao clicar num link do menu ou fora do menu
-        if (nav.classList.contains("open") && !e.target.closest("#main-nav")) {
-            nav.classList.remove("open");
-            var btn = document.querySelector(".nav-toggle");
-            if (btn) btn.setAttribute("aria-expanded", "false");
-        }
+        // Fechar qualquer menu aberto ao clicar num link ou fora dele
+        document.querySelectorAll(".main-nav.open").forEach(function (nav) {
+            if (!e.target.closest("#" + nav.id) && !e.target.closest(".nav-toggle")) {
+                nav.classList.remove("open");
+                var btn = document.querySelector('.nav-toggle[aria-controls="' + nav.id + '"]');
+                if (btn) btn.setAttribute("aria-expanded", "false");
+            }
+        });
     });
 
     // Pré-visualização da imagem escolhida em cada slot do formulário de artigo
