@@ -73,7 +73,7 @@
             up.className = "image-card-btn";
             up.setAttribute("data-action", "up");
             up.setAttribute("aria-label", "Mover para cima");
-            up.textContent = "↑";
+            up.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>';
             if (index === 0) up.disabled = true;
             actions.appendChild(up);
 
@@ -82,7 +82,7 @@
             down.className = "image-card-btn";
             down.setAttribute("data-action", "down");
             down.setAttribute("aria-label", "Mover para baixo");
-            down.textContent = "↓";
+            down.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
             if (index === total - 1) down.disabled = true;
             actions.appendChild(down);
 
@@ -91,7 +91,7 @@
             remove.className = "image-card-btn image-card-btn-danger";
             remove.setAttribute("data-action", "remove");
             remove.setAttribute("aria-label", "Remover imagem");
-            remove.textContent = "✕";
+            remove.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
             actions.appendChild(remove);
 
             card.appendChild(actions);

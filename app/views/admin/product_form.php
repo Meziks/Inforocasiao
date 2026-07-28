@@ -82,9 +82,9 @@ $conditions = ['Novo', 'Usado', 'Recondicionado'];
                             <img src="<?= e(uploadUrl($img)) ?>" class="image-card-thumb" alt="">
                             <span class="image-card-badge"></span>
                             <div class="image-card-actions">
-                                <button type="button" class="image-card-btn" data-action="up" aria-label="Mover para cima">↑</button>
-                                <button type="button" class="image-card-btn" data-action="down" aria-label="Mover para baixo">↓</button>
-                                <button type="button" class="image-card-btn image-card-btn-danger" data-action="remove" aria-label="Remover imagem">✕</button>
+                                <button type="button" class="image-card-btn" data-action="up" aria-label="Mover para cima"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg></button>
+                                <button type="button" class="image-card-btn" data-action="down" aria-label="Mover para baixo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+                                <button type="button" class="image-card-btn image-card-btn-danger" data-action="remove" aria-label="Remover imagem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
                             </div>
                             <input type="hidden" name="existing_images[]" value="<?= e($img) ?>">
                         </div>
@@ -93,11 +93,13 @@ $conditions = ['Novo', 'Usado', 'Recondicionado'];
                 <input type="hidden" name="image_order" id="image-order-input" value="">
                 <div class="image-manager-add">
                     <label class="btn btn-outline btn-file-upload">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 0 4 4m-4-4L8 7"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
                         Carregar imagens…
                         <input type="file" name="images[]" id="image-file-input" accept="image/*" multiple>
                     </label>
+                    <span class="image-manager-divider">ou</span>
                     <div class="image-url-add">
-                        <input type="url" class="input" id="image-url-input" placeholder="…ou cole um URL de imagem">
+                        <input type="url" class="input" id="image-url-input" placeholder="Cole um URL de imagem">
                         <button type="button" class="btn btn-outline" id="image-url-add-btn">Adicionar</button>
                     </div>
                 </div>
