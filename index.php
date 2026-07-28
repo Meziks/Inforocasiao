@@ -80,13 +80,9 @@ try {
                 render('404', ['title' => 'Não encontrado']);
                 break;
             }
-            $extraImgs = Database::all(
-                "SELECT image FROM product_images WHERE product_id = ? ORDER BY sort_order",
-                [$produto['id']]
-            );
             $galeria = array_values(array_filter(array_merge(
                 [$produto['image']],
-                array_column($extraImgs, 'image')
+                array_column(extraProductImages($produto['id']), 'image')
             )));
             $pDesc = trim((string) ($produto['description'] ?? ''));
             if ($pDesc === '') {
@@ -254,12 +250,8 @@ try {
             if (!$produto) { http_response_code(404); render('404', ['title' => '404'], 'layout_admin'); break; }
             $categorias = Database::all("SELECT * FROM categories ORDER BY name");
             // Imagens extra (slots 2-4), indexadas por sort_order (1,2,3)
-            $extra = Database::all(
-                "SELECT sort_order, image FROM product_images WHERE product_id = ? ORDER BY sort_order",
-                [$produto['id']]
-            );
             $extraImages = [];
-            foreach ($extra as $row) {
+            foreach (extraProductImages($produto['id'], true) as $row) {
                 $extraImages[(int) $row['sort_order']] = $row['image'];
             }
             render('admin/product_form', [
@@ -278,7 +270,7 @@ try {
             Auth::requireLogin();
             csrf_verify();
             $produto = Database::one("SELECT image FROM products WHERE id = ?", [(int) $m[1]]);
-            $extraDel = Database::all("SELECT image FROM product_images WHERE product_id = ?", [(int) $m[1]]);
+            $extraDel = extraProductImages((int) $m[1]);
             Database::run("DELETE FROM products WHERE id = ?", [(int) $m[1]]); // product_images cai em cascata
             if ($produto && $produto['image'] && !isRemoteImage($produto['image'])) {
                 @unlink(BASE_PATH . '/uploads/' . $produto['image']);
@@ -376,10 +368,7 @@ function saveProduct(?int $id): void
  */
 function saveExtraImageSlots(int $productId): void
 {
-    $current = Database::all(
-        "SELECT sort_order, image FROM product_images WHERE product_id = ?",
-        [$productId]
-    );
+    $current = extraProductImages($productId, true);
     $byOrder = [];
     foreach ($current as $row) {
         $byOrder[(int) $row['sort_order']] = $row['image'];
@@ -418,6 +407,26 @@ function saveExtraImageSlots(int $productId): void
         }
 
         // Nada enviado neste slot: mantém o que já lá está
+    }
+}
+
+/**
+ * Devolve as imagens extra (slots 2-4) de um produto, a partir de
+ * product_images. Se a tabela ainda não existir (ex.: mesmo instante em
+ * que a migration está a ser aplicada no deploy), devolve [] em vez de
+ * rebentar a página — a foto principal continua a aparecer na mesma.
+ */
+function extraProductImages(int $productId, bool $withSortOrder = false): array
+{
+    try {
+        $cols = $withSortOrder ? 'sort_order, image' : 'image';
+        return Database::all(
+            "SELECT {$cols} FROM product_images WHERE product_id = ? ORDER BY sort_order",
+            [$productId]
+        );
+    } catch (Throwable $e) {
+        error_log('extraProductImages: ' . $e->getMessage());
+        return [];
     }
 }
 
