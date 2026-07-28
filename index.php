@@ -71,14 +71,9 @@ try {
                 render('404', ['title' => 'Não encontrado']);
                 break;
             }
-            $extraImages = Database::all(
-                "SELECT image FROM product_images WHERE product_id = ? ORDER BY sort_order",
-                [$produto['id']]
-            );
-            $galeria = array_values(array_filter(array_merge(
-                [$produto['image']],
-                array_column($extraImages, 'image')
-            )));
+            $galeria = array_values(array_filter([
+                $produto['image'], $produto['image2'], $produto['image3'], $produto['image4'],
+            ]));
             $pDesc = trim((string) ($produto['description'] ?? ''));
             if ($pDesc === '') {
                 $pDesc = sprintf(
@@ -192,7 +187,7 @@ try {
             Auth::requireLogin();
             $categorias = Database::all("SELECT * FROM categories ORDER BY name");
             render('admin/product_form', [
-                'produto' => null, 'categorias' => $categorias, 'extraImages' => [], 'title' => 'Novo artigo',
+                'produto' => null, 'categorias' => $categorias, 'title' => 'Novo artigo',
             ], 'layout_admin');
             break;
 
@@ -207,18 +202,8 @@ try {
             $produto = Database::one("SELECT * FROM products WHERE id = ?", [(int) $m[1]]);
             if (!$produto) { http_response_code(404); render('404', ['title' => '404'], 'layout_admin'); break; }
             $categorias = Database::all("SELECT * FROM categories ORDER BY name");
-            // Imagens extra (slots 2-4), indexadas por sort_order (1,2,3)
-            $extra = Database::all(
-                "SELECT sort_order, image FROM product_images WHERE product_id = ? ORDER BY sort_order",
-                [$produto['id']]
-            );
-            $extraImages = [];
-            foreach ($extra as $row) {
-                $extraImages[(int) $row['sort_order']] = $row['image'];
-            }
             render('admin/product_form', [
-                'produto' => $produto, 'categorias' => $categorias, 'extraImages' => $extraImages,
-                'title' => 'Editar artigo',
+                'produto' => $produto, 'categorias' => $categorias, 'title' => 'Editar artigo',
             ], 'layout_admin');
             break;
 
@@ -231,15 +216,16 @@ try {
         case preg_match('#^/admin/produtos/(\d+)/apagar$#', $path, $m) === 1 && $method === 'POST':
             Auth::requireLogin();
             csrf_verify();
-            $produto = Database::one("SELECT image FROM products WHERE id = ?", [(int) $m[1]]);
-            $extraDel = Database::all("SELECT image FROM product_images WHERE product_id = ?", [(int) $m[1]]);
-            Database::run("DELETE FROM products WHERE id = ?", [(int) $m[1]]); // product_images cai em cascata
-            if ($produto && $produto['image'] && !isRemoteImage($produto['image'])) {
-                @unlink(BASE_PATH . '/uploads/' . $produto['image']);
-            }
-            foreach ($extraDel as $row) {
-                if ($row['image'] && !isRemoteImage($row['image'])) {
-                    @unlink(BASE_PATH . '/uploads/' . $row['image']);
+            $produto = Database::one(
+                "SELECT image, image2, image3, image4 FROM products WHERE id = ?",
+                [(int) $m[1]]
+            );
+            Database::run("DELETE FROM products WHERE id = ?", [(int) $m[1]]);
+            if ($produto) {
+                foreach ([$produto['image'], $produto['image2'], $produto['image3'], $produto['image4']] as $img) {
+                    if ($img && !isRemoteImage($img)) {
+                        @unlink(BASE_PATH . '/uploads/' . $img);
+                    }
                 }
             }
             flash('success', 'Artigo apagado.');
@@ -289,87 +275,68 @@ function saveProduct(?int $id): void
     // Imagem principal (slot 1): ficheiro carregado tem prioridade; senão, URL colado (opcional)
     $imageName = resolveImageSlot('image', 'image_url');
 
+    // Imagens extra (slots 2 a 4): cada uma pode ser substituída, removida, ou deixada como está
+    $extraSlots = [];
+    for ($slot = 2; $slot <= 4; $slot++) {
+        $col = "image{$slot}";
+        $new = resolveImageSlot($col, "image_url{$slot}");
+        if ($new !== null) {
+            $extraSlots[$col] = ['action' => 'replace', 'value' => $new];
+        } elseif (!empty($_POST["{$col}_remove"])) {
+            $extraSlots[$col] = ['action' => 'remove', 'value' => null];
+        }
+        // se nada foi enviado nem marcado, o slot fica como está (nenhuma entrada no array)
+    }
+
     if ($id === null) {
         Database::run(
             "INSERT INTO products
-             (name, brand, category_id, price, stock, `condition`, description, image, is_active, is_featured, created_at, updated_at)
-             VALUES (?,?,?,?,?,?,?,?,?,?,NOW(),NOW())",
-            [$name, $brand, $categoryId, $price, $stock, $condition, $description, $imageName, $isActive, $isFeatured]
+             (name, brand, category_id, price, stock, `condition`, description, image, image2, image3, image4, is_active, is_featured, created_at, updated_at)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())",
+            [
+                $name, $brand, $categoryId, $price, $stock, $condition, $description, $imageName,
+                $extraSlots['image2']['value'] ?? null,
+                $extraSlots['image3']['value'] ?? null,
+                $extraSlots['image4']['value'] ?? null,
+                $isActive, $isFeatured,
+            ]
         );
-        $id = (int) Database::pdo()->lastInsertId();
         flash('success', 'Artigo criado com sucesso.');
     } else {
-        // Se enviou nova imagem principal, apaga a antiga
-        if ($imageName !== null) {
-            $old = Database::one("SELECT image FROM products WHERE id = ?", [$id]);
-            if ($old && $old['image'] && !isRemoteImage($old['image'])) {
-                @unlink(BASE_PATH . '/uploads/' . $old['image']);
-            }
+        $old = Database::one(
+            "SELECT image, image2, image3, image4 FROM products WHERE id = ?",
+            [$id]
+        );
+
+        // Apaga o ficheiro antigo sempre que a imagem principal é substituída
+        if ($imageName !== null && $old && $old['image'] && !isRemoteImage($old['image'])) {
+            @unlink(BASE_PATH . '/uploads/' . $old['image']);
         }
+
         $sql = "UPDATE products SET name=?, brand=?, category_id=?, price=?, stock=?,
                 `condition`=?, description=?, is_active=?, is_featured=?, updated_at=NOW()";
         $params = [$name, $brand, $categoryId, $price, $stock, $condition, $description, $isActive, $isFeatured];
+
         if ($imageName !== null) {
             $sql .= ", image=?";
             $params[] = $imageName;
         }
+        foreach ($extraSlots as $col => $change) {
+            // Substituir ou remover: sempre que muda, apaga o ficheiro antigo local (se existir)
+            if ($old && $old[$col] && !isRemoteImage($old[$col])) {
+                @unlink(BASE_PATH . '/uploads/' . $old[$col]);
+            }
+            $sql .= ", {$col}=?";
+            $params[] = $change['value']; // null (remover) ou o novo ficheiro/URL (substituir)
+        }
+
         $sql .= " WHERE id=?";
         $params[] = $id;
         Database::run($sql, $params);
         flash('success', 'Artigo atualizado com sucesso.');
     }
 
-    saveExtraImageSlots($id);
     redirect('/admin/dashboard');
-}
-
-/**
- * Guarda as imagens extra (slots 2 a 4) de um produto em product_images.
- * Cada slot pode: receber uma imagem nova (ficheiro ou URL), ser removido
- * (checkbox "remove"), ou ficar como está (nada enviado nesse slot).
- */
-function saveExtraImageSlots(int $productId): void
-{
-    $current = Database::all(
-        "SELECT sort_order, image FROM product_images WHERE product_id = ?",
-        [$productId]
-    );
-    $byOrder = [];
-    foreach ($current as $row) {
-        $byOrder[(int) $row['sort_order']] = $row['image'];
-    }
-
-    for ($slot = 2; $slot <= 4; $slot++) {
-        $sortOrder = $slot - 1;
-        $existing  = $byOrder[$sortOrder] ?? null;
-
-        if (!empty($_POST["image{$slot}_remove"])) {
-            if ($existing !== null) {
-                Database::run(
-                    "DELETE FROM product_images WHERE product_id = ? AND sort_order = ?",
-                    [$productId, $sortOrder]
-                );
-                if (!isRemoteImage($existing)) {
-                    @unlink(BASE_PATH . '/uploads/' . $existing);
-                }
-            }
-            continue;
-        }
-
-        $newImage = resolveImageSlot("image{$slot}", "image{$slot}_url");
-        if ($newImage === null) {
-            continue; // nada enviado neste slot: mantém o que já lá está
-        }
-
-        if ($existing !== null && !isRemoteImage($existing)) {
-            @unlink(BASE_PATH . '/uploads/' . $existing);
-        }
-        Database::run(
-            "INSERT INTO product_images (product_id, image, sort_order) VALUES (?,?,?)
-             ON DUPLICATE KEY UPDATE image = VALUES(image)",
-            [$productId, $newImage, $sortOrder]
-        );
-    }
 }
 
 /** Resolve um slot de imagem: ficheiro carregado tem prioridade sobre URL colado. */

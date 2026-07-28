@@ -59,12 +59,12 @@ $conditions = ['Novo', 'Usado', 'Recondicionado'];
             <p class="field-label">Fotografias (até 4)</p>
             <div class="image-slots-grid">
                 <?php
-                $extraImages = $extraImages ?? [];
                 for ($slot = 1; $slot <= 4; $slot++):
-                    $isMain   = $slot === 1;
-                    $current  = $isMain ? ($produto['image'] ?? null) : ($extraImages[$slot - 1] ?? null);
-                    $urlKey   = $isMain ? 'image_url' : "image{$slot}_url";
-                    $fileKey  = $isMain ? 'image' : "image{$slot}";
+                    $isMain    = $slot === 1;
+                    $colName   = $isMain ? 'image' : "image{$slot}";
+                    $current   = $produto[$colName] ?? null;
+                    $urlKey    = $isMain ? 'image_url' : "image_url{$slot}";
+                    $fileKey   = $colName;
                     $curUrlVal = ($current && isRemoteImage($current)) ? $current : '';
                 ?>
                 <div class="image-slot">
