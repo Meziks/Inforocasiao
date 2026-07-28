@@ -82,7 +82,7 @@ try {
             }
             $galeria = array_values(array_filter(array_merge(
                 [$produto['image']],
-                array_column(extraProductImages($produto['id']), 'image')
+                array_column(extraProductImages((int) $produto['id']), 'image')
             )));
             $pDesc = trim((string) ($produto['description'] ?? ''));
             if ($pDesc === '') {
@@ -251,7 +251,7 @@ try {
             $categorias = Database::all("SELECT * FROM categories ORDER BY name");
             // Imagens extra (slots 2-4), indexadas por sort_order (1,2,3)
             $extraImages = [];
-            foreach (extraProductImages($produto['id'], true) as $row) {
+            foreach (extraProductImages((int) $produto['id'], true) as $row) {
                 $extraImages[(int) $row['sort_order']] = $row['image'];
             }
             render('admin/product_form', [
