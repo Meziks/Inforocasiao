@@ -51,45 +51,35 @@
 
 <section class="container section">
     <div class="section-head">
-        <div><h2>Categorias</h2><p class="sub">Encontre o que procura por área</p></div>
-        <a href="<?= e(url('/produtos')) ?>" class="link-more">Ver tudo →</a>
-    </div>
-    <div class="category-grid">
-        <a href="<?= e(url('/produtos?categoria=computadores')) ?>" class="cat-card">
-            <span class="cat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
-            Computadores
-        </a>
-        <a href="<?= e(url('/produtos?categoria=portateis')) ?>" class="cat-card">
-            <span class="cat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg></span>
-            Portáteis
-        </a>
-        <a href="<?= e(url('/produtos?categoria=telemoveis')) ?>" class="cat-card">
-            <span class="cat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M12 18h.01"/></svg></span>
-            Telemóveis
-        </a>
-        <a href="<?= e(url('/produtos?categoria=componentes')) ?>" class="cat-card">
-            <span class="cat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="1"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></svg></span>
-            Componentes
-        </a>
-        <a href="<?= e(url('/produtos?categoria=acessorios')) ?>" class="cat-card">
-            <span class="cat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3ZM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3Z"/></svg></span>
-            Acessórios
-        </a>
-    </div>
-</section>
-
-<section class="container section" style="padding-top:0">
-    <div class="section-head">
         <div><h2>Em destaque</h2><p class="sub">Seleção de artigos disponíveis</p></div>
         <a href="<?= e(url('/produtos')) ?>" class="link-more">Ver todos →</a>
     </div>
     <?php if (empty($destaques)): ?>
-        <p class="muted empty-state">Ainda não há produtos em destaque. Adicione artigos na área de gestão e marque-os como "destaque".</p>
-    <?php else: ?>
+        <p class="muted empty-state">Ainda não há produtos. Adicione artigos na área de gestão.</p>
+    <?php elseif (count($destaques) <= 4): ?>
         <div class="product-grid">
             <?php foreach ($destaques as $p): ?>
                 <?php require BASE_PATH . '/app/views/partials/product_card.php'; ?>
             <?php endforeach; ?>
+        </div>
+    <?php else: ?>
+        <div class="carousel" id="featured-carousel">
+            <div class="carousel-viewport">
+                <div class="carousel-track">
+                    <?php foreach ($destaques as $p): ?>
+                        <div class="carousel-slide">
+                            <?php require BASE_PATH . '/app/views/partials/product_card.php'; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <button type="button" class="carousel-nav carousel-prev" aria-label="Anterior">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button type="button" class="carousel-nav carousel-next" aria-label="Seguinte">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="carousel-dots"></div>
         </div>
     <?php endif; ?>
 </section>
