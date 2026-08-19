@@ -6,14 +6,14 @@
     <div class="alert alert-error" style="margin: 18px 0;">
         <strong>Rascunho de trabalho.</strong> Este texto é uma base de partida e ainda não foi revisto por
         um advogado ou contabilista. Não deve ser considerado juridicamente válido antes dessa revisão —
-        em particular os dados de identificação da empresa (NIF) e o email de contacto ainda estão por confirmar.
+        em particular o email de contacto ainda está por confirmar.
     </div>
 
     <div class="card">
         <h3 class="form-section-title">1. Responsável pelo tratamento</h3>
         <p>
             <?= e($biz['name']) ?>, com sede em <?= e($biz['street']) ?>, <?= e($biz['postal']) ?> <?= e($biz['city']) ?>,
-            NIF [a preencher]. Contacto: <a href="tel:<?= e($biz['phone']) ?>"><?= e($biz['phone']) ?></a>.
+            NIF 192115707. Contacto: <a href="tel:<?= e($biz['phone']) ?>"><?= e($biz['phone']) ?></a>.
         </p>
 
         <h3 class="form-section-title">2. Que dados recolhemos</h3>

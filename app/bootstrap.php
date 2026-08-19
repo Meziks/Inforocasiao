@@ -45,5 +45,6 @@ require BASE_PATH . '/app/Database.php';
 require BASE_PATH . '/app/Auth.php';
 require BASE_PATH . '/app/CustomerAuth.php';
 require BASE_PATH . '/app/Mailer.php';
+require BASE_PATH . '/app/Cart.php';
 require BASE_PATH . '/app/Reviews.php';
 require BASE_PATH . '/app/Seo.php';

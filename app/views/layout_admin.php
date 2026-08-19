@@ -20,6 +20,8 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
         </button>
         <nav class="main-nav" id="admin-nav">
+            <a href="<?= e(url('/admin/dashboard')) ?>">Artigos</a>
+            <a href="<?= e(url('/admin/encomendas')) ?>">Encomendas</a>
             <a href="<?= e(url('/')) ?>" target="_blank">Ver site ↗</a>
             <form action="<?= e(url('/admin/logout')) ?>" method="post" class="inline-form">
                 <?= csrf_field() ?>

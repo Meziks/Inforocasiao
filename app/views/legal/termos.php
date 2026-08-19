@@ -6,14 +6,14 @@
     <div class="alert alert-error" style="margin: 18px 0;">
         <strong>Rascunho de trabalho.</strong> Este texto é uma base de partida e ainda não foi revisto por
         um advogado ou contabilista. Não deve ser considerado juridicamente válido antes dessa revisão —
-        em particular os dados de identificação da empresa (NIF) ainda estão por preencher.
+        em particular as cláusulas de garantia, devolução e resolução de litígios.
     </div>
 
     <div class="card">
         <h3 class="form-section-title">1. Identificação</h3>
         <p>
             <?= e($biz['name']) ?>, com sede em <?= e($biz['street']) ?>, <?= e($biz['postal']) ?> <?= e($biz['city']) ?>,
-            NIF [a preencher], doravante "a Loja".
+            NIF 192115707, doravante "a Loja".
         </p>
 
         <h3 class="form-section-title">2. Objeto</h3>

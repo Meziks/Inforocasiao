@@ -64,7 +64,19 @@
             <?php endif; ?>
 
             <div class="detail-actions">
-                <a href="<?= e(url('/contactos')) ?>" class="btn btn-primary btn-lg">Contactar para comprar</a>
+                <?php if ((int) $produto['stock'] > 0): ?>
+                    <form method="post" action="<?= e(url('/carrinho/adicionar')) ?>" class="inline-form">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="product_id" value="<?= (int) $produto['id'] ?>">
+                        <input type="hidden" name="redirect" value="<?= e(url('/produto/' . $produto['id'])) ?>">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                            Adicionar ao carrinho
+                        </button>
+                    </form>
+                <?php else: ?>
+                    <button type="button" class="btn btn-primary btn-lg" disabled>Esgotado</button>
+                <?php endif; ?>
                 <a class="btn btn-whatsapp btn-lg"
                    href="https://wa.me/351912138094?text=<?= rawurlencode('Olá! Tenho interesse no artigo "' . $produto['name'] . '" (' . money($produto['price']) . '). Podem dar-me mais informações?') ?>"
                    target="_blank" rel="noopener">

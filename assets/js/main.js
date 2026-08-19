@@ -205,6 +205,21 @@
         render();
     })();
 
+    // Checkout: mostrar os campos de morada só quando "Envio" está escolhido
+    (function () {
+        var form = document.querySelector(".checkout-form");
+        if (!form) return;
+        var shippingSection = document.getElementById("shipping-fields");
+        var radios = form.querySelectorAll('input[name="fulfillment"]');
+
+        function update() {
+            var selected = form.querySelector('input[name="fulfillment"]:checked');
+            shippingSection.hidden = !(selected && selected.value === "envio");
+        }
+        radios.forEach(function (r) { r.addEventListener("change", update); });
+        update();
+    })();
+
     // Ficha de produto: trocar a imagem principal ao clicar numa miniatura
     var currentGalleryIndex = 0;
     document.addEventListener("click", function (e) {

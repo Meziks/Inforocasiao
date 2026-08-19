@@ -18,6 +18,27 @@
 
     <div class="card" style="margin-top:18px">
         <h3 class="form-section-title">As minhas encomendas</h3>
-        <p class="muted">Ainda não é possível fazer encomendas online — esta parte está a ser preparada.</p>
+        <?php if (empty($encomendas)): ?>
+            <p class="muted">Ainda não fez nenhuma encomenda. <a href="<?= e(url('/produtos')) ?>">Ver produtos</a></p>
+        <?php else: ?>
+            <?php $statusLabels = [
+                'pendente' => 'Pendente', 'confirmada' => 'Confirmada', 'pronta' => 'Pronta',
+                'enviada' => 'Enviada', 'concluida' => 'Concluída', 'cancelada' => 'Cancelada',
+            ]; ?>
+            <div class="cart-list">
+                <?php foreach ($encomendas as $enc): ?>
+                    <a href="<?= e(url('/encomendas/' . $enc['id'])) ?>" class="cart-row order-row">
+                        <div class="cart-row-info">
+                            <span class="row-title">Encomenda #<?= (int) $enc['id'] ?></span>
+                            <p class="cart-row-price"><?= date('d/m/Y', strtotime($enc['created_at'])) ?> · <?= $enc['fulfillment'] === 'envio' ? 'Envio' : 'Levantamento' ?></p>
+                        </div>
+                        <div class="cart-row-actions">
+                            <span class="tag tag-on"><?= e($statusLabels[$enc['status']] ?? $enc['status']) ?></span>
+                            <span class="cart-row-subtotal"><?= money($enc['total']) ?></span>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
 </section>

@@ -185,7 +185,12 @@ try {
 
         case $path === '/conta' && $method === 'GET':
             CustomerAuth::requireLogin();
-            render('account/index', ['cliente' => CustomerAuth::user(), 'title' => 'A minha conta']);
+            $cliente = CustomerAuth::user();
+            $encomendas = Database::all(
+                'SELECT * FROM orders WHERE customer_id = ? ORDER BY created_at DESC',
+                [$cliente['id']]
+            );
+            render('account/index', ['cliente' => $cliente, 'encomendas' => $encomendas, 'title' => 'A minha conta']);
             break;
 
         case $path === '/recuperar-password' && $method === 'GET':
@@ -251,6 +256,70 @@ try {
         case $path === '/privacidade' && $method === 'GET':
             seo(['canonical' => '/privacidade', 'description' => 'Política de Privacidade da Inforocasião.']);
             render('legal/privacidade', ['title' => 'Política de Privacidade']);
+            break;
+
+        // ---------- Carrinho e checkout ----------
+        case $path === '/carrinho/adicionar' && $method === 'POST':
+            csrf_verify();
+            $productId = (int) ($_POST['product_id'] ?? 0);
+            $produto   = Database::one('SELECT id FROM products WHERE id = ? AND is_active = 1', [$productId]);
+            if ($produto) {
+                Cart::add($productId, 1);
+                flash('success', 'Artigo adicionado ao carrinho.');
+            } else {
+                flash('error', 'Esse artigo já não está disponível.');
+            }
+            $redirect = (string) ($_POST['redirect'] ?? '/carrinho');
+            redirect(str_starts_with($redirect, '/') && !str_starts_with($redirect, '//') ? $redirect : '/carrinho');
+            break;
+
+        case $path === '/carrinho/atualizar' && $method === 'POST':
+            csrf_verify();
+            Cart::setQty((int) ($_POST['product_id'] ?? 0), (int) ($_POST['qty'] ?? 0));
+            redirect('/carrinho');
+            break;
+
+        case $path === '/carrinho/remover' && $method === 'POST':
+            csrf_verify();
+            Cart::remove((int) ($_POST['product_id'] ?? 0));
+            redirect('/carrinho');
+            break;
+
+        case $path === '/carrinho' && $method === 'GET':
+            seo(['canonical' => '/carrinho']);
+            render('cart/index', ['itens' => Cart::items(), 'total' => Cart::total(), 'title' => 'Carrinho']);
+            break;
+
+        case $path === '/checkout' && $method === 'GET':
+            CustomerAuth::requireLogin();
+            $itens = Cart::items();
+            if (!$itens) {
+                flash('error', 'O seu carrinho está vazio.');
+                redirect('/carrinho');
+            }
+            seo(['canonical' => '/checkout']);
+            render('cart/checkout', [
+                'itens' => $itens, 'total' => Cart::total(), 'cliente' => CustomerAuth::user(), 'title' => 'Checkout',
+            ]);
+            break;
+
+        case $path === '/checkout' && $method === 'POST':
+            csrf_verify();
+            CustomerAuth::requireLogin();
+            placeOrder();
+            break;
+
+        case preg_match('#^/encomendas/(\d+)$#', $path, $m) === 1 && $method === 'GET':
+            CustomerAuth::requireLogin();
+            $cliente = CustomerAuth::user();
+            $encomenda = Database::one('SELECT * FROM orders WHERE id = ? AND customer_id = ?', [(int) $m[1], $cliente['id']]);
+            if (!$encomenda) {
+                http_response_code(404);
+                render('404', ['title' => 'Não encontrado']);
+                break;
+            }
+            $itensEncomenda = Database::all('SELECT * FROM order_items WHERE order_id = ?', [$encomenda['id']]);
+            render('cart/order', ['encomenda' => $encomenda, 'itens' => $itensEncomenda, 'title' => 'Encomenda #' . $encomenda['id']]);
             break;
 
         // ---------- SEO: sitemap e robots ----------
@@ -411,6 +480,47 @@ try {
             }
             flash('success', 'Artigo apagado.');
             redirect('/admin/dashboard');
+            break;
+
+        // ---------- Painel de gestão: encomendas ----------
+        case $path === '/admin/encomendas' && $method === 'GET':
+            Auth::requireLogin();
+            $estadoFiltro = (string) ($_GET['estado'] ?? '');
+            $sql = "SELECT o.*, c.name AS customer_name, c.email AS customer_email
+                    FROM orders o JOIN customers c ON c.id = o.customer_id WHERE 1=1";
+            $params = [];
+            if ($estadoFiltro !== '') {
+                $sql .= " AND o.status = ?";
+                $params[] = $estadoFiltro;
+            }
+            $sql .= " ORDER BY o.created_at DESC";
+            render('admin/orders', [
+                'encomendas' => Database::all($sql, $params), 'estadoFiltro' => $estadoFiltro, 'title' => 'Encomendas',
+            ], 'layout_admin');
+            break;
+
+        case preg_match('#^/admin/encomendas/(\d+)$#', $path, $m) === 1 && $method === 'GET':
+            Auth::requireLogin();
+            $encomenda = Database::one(
+                "SELECT o.*, c.name AS customer_name, c.email AS customer_email, c.phone AS customer_phone
+                 FROM orders o JOIN customers c ON c.id = o.customer_id WHERE o.id = ?",
+                [(int) $m[1]]
+            );
+            if (!$encomenda) {
+                http_response_code(404);
+                render('404', ['title' => 'Não encontrado'], 'layout_admin');
+                break;
+            }
+            $itensEncomenda = Database::all('SELECT * FROM order_items WHERE order_id = ?', [$encomenda['id']]);
+            render('admin/order_detail', [
+                'encomenda' => $encomenda, 'itens' => $itensEncomenda, 'title' => 'Encomenda #' . $encomenda['id'],
+            ], 'layout_admin');
+            break;
+
+        case preg_match('#^/admin/encomendas/(\d+)$#', $path, $m) === 1 && $method === 'POST':
+            Auth::requireLogin();
+            csrf_verify();
+            updateOrderStatus((int) $m[1], (string) ($_POST['status'] ?? ''));
             break;
 
         // ---------- 404 ----------
@@ -637,4 +747,201 @@ function handleImageUpload(array $file): ?string
     $newName = date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $allowed[$mime];
     move_uploaded_file($file['tmp_name'], $dir . '/' . $newName);
     return $newName;
+}
+
+/**
+ * Processa o checkout: valida o formulário, reserva stock numa única
+ * transação (com SELECT ... FOR UPDATE sobre todos os artigos do carrinho
+ * de uma vez, para nunca vender a mesma unidade a duas pessoas em
+ * simultâneo), cria a encomenda e limpa o carrinho.
+ */
+function placeOrder(): void
+{
+    $itens = Cart::items();
+    if (!$itens) {
+        flash('error', 'O seu carrinho está vazio.');
+        redirect('/carrinho');
+    }
+
+    $fulfillment = (string) ($_POST['fulfillment'] ?? '');
+    if (!in_array($fulfillment, ['levantamento', 'envio'], true)) {
+        flash('error', 'Escolha uma forma de entrega.');
+        redirect('/checkout');
+    }
+
+    $shippingName    = trim((string) ($_POST['shipping_name'] ?? ''));
+    $shippingAddress = trim((string) ($_POST['shipping_address'] ?? ''));
+    $shippingPostal  = trim((string) ($_POST['shipping_postal'] ?? ''));
+    $shippingCity    = trim((string) ($_POST['shipping_city'] ?? ''));
+    $phone           = trim((string) ($_POST['phone'] ?? ''));
+    $notes           = trim((string) ($_POST['notes'] ?? ''));
+
+    if ($fulfillment === 'envio' && ($shippingName === '' || $shippingAddress === '' || $shippingPostal === '' || $shippingCity === '')) {
+        flash('error', 'Preencha a morada de envio.');
+        redirect('/checkout');
+    }
+    if ($phone === '') {
+        flash('error', 'Indique um telefone de contacto.');
+        redirect('/checkout');
+    }
+
+    $cliente = CustomerAuth::user();
+    $pdo     = Database::pdo();
+    $pdo->beginTransaction();
+
+    try {
+        $ids = array_map(fn($i) => (int) $i['product']['id'], $itens);
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $rows = Database::all("SELECT * FROM products WHERE id IN ($placeholders) FOR UPDATE", $ids);
+
+        $lockedProducts = [];
+        foreach ($rows as $row) {
+            $lockedProducts[(int) $row['id']] = $row;
+        }
+
+        $insufficient = [];
+        $total = 0.0;
+        foreach ($itens as $item) {
+            $pid     = (int) $item['product']['id'];
+            $qty     = (int) $item['qty'];
+            $current = $lockedProducts[$pid] ?? null;
+            if (!$current || !$current['is_active'] || (int) $current['stock'] < $qty) {
+                $insufficient[] = $item['product']['name'];
+                continue;
+            }
+            $total += (float) $current['price'] * $qty;
+        }
+
+        if ($insufficient) {
+            $pdo->rollBack();
+            // Corrige o carrinho para o stock real, para o cliente ver logo o que mudou.
+            foreach ($itens as $item) {
+                $pid   = (int) $item['product']['id'];
+                $fresh = Database::one('SELECT stock, is_active FROM products WHERE id = ?', [$pid]);
+                if (!$fresh || !$fresh['is_active']) {
+                    Cart::remove($pid);
+                } elseif ((int) $fresh['stock'] < $item['qty']) {
+                    Cart::setQty($pid, (int) $fresh['stock']);
+                }
+            }
+            flash('error', 'Já não há stock suficiente de: ' . implode(', ', $insufficient) . '. O carrinho foi atualizado.');
+            redirect('/carrinho');
+        }
+
+        $pdo->prepare(
+            'INSERT INTO orders (customer_id, status, fulfillment, shipping_name, shipping_address, shipping_postal, shipping_city, phone, notes, total)
+             VALUES (?, "pendente", ?, ?, ?, ?, ?, ?, ?, ?)'
+        )->execute([
+            $cliente['id'], $fulfillment,
+            $fulfillment === 'envio' ? $shippingName : null,
+            $fulfillment === 'envio' ? $shippingAddress : null,
+            $fulfillment === 'envio' ? $shippingPostal : null,
+            $fulfillment === 'envio' ? $shippingCity : null,
+            $phone, $notes !== '' ? $notes : null, $total,
+        ]);
+        $orderId = (int) $pdo->lastInsertId();
+
+        foreach ($itens as $item) {
+            $pid     = (int) $item['product']['id'];
+            $qty     = (int) $item['qty'];
+            $current = $lockedProducts[$pid];
+            $pdo->prepare(
+                'INSERT INTO order_items (order_id, product_id, product_name, unit_price, qty) VALUES (?, ?, ?, ?, ?)'
+            )->execute([$orderId, $pid, $current['name'], $current['price'], $qty]);
+            $pdo->prepare('UPDATE products SET stock = stock - ? WHERE id = ?')->execute([$qty, $pid]);
+        }
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        logError('placeOrder', $e);
+        flash('error', 'Não foi possível concluir a encomenda. Tente novamente.');
+        redirect('/checkout');
+    }
+
+    Cart::clear();
+
+    Mailer::send(
+        $cliente['email'], $cliente['name'],
+        'Confirmação da encomenda #' . $orderId . ' — Inforocasião',
+        '<p>Olá ' . e($cliente['name']) . ',</p>'
+        . '<p>Recebemos a sua encomenda #' . $orderId . ', no valor de ' . e(money($total)) . '.</p>'
+        . '<p>' . ($fulfillment === 'levantamento'
+            ? 'Vamos avisá-lo(a) assim que estiver pronta para levantamento na loja.'
+            : 'Vamos avisá-lo(a) assim que for enviada.') . '</p>'
+        . '<p>Pode acompanhar o estado em <a href="' . e(Seo::abs('/encomendas/' . $orderId)) . '">' . e(Seo::abs('/encomendas/' . $orderId)) . '</a>.</p>'
+    );
+
+    flash('success', 'Encomenda #' . $orderId . ' confirmada! É paga na loja/entrega, conforme escolheu.');
+    redirect('/encomendas/' . $orderId);
+}
+
+/**
+ * Muda o estado de uma encomenda (gestão). Ao cancelar, repõe o stock dos
+ * artigos; ao reverter um cancelamento, tenta voltar a reservar o stock —
+ * e recusa a mudança se já não houver stock suficiente.
+ */
+function updateOrderStatus(int $orderId, string $newStatus): void
+{
+    $validStatuses = ['pendente', 'confirmada', 'pronta', 'enviada', 'concluida', 'cancelada'];
+    if (!in_array($newStatus, $validStatuses, true)) {
+        flash('error', 'Estado inválido.');
+        redirect('/admin/encomendas/' . $orderId);
+    }
+
+    $pdo = Database::pdo();
+    $pdo->beginTransaction();
+    try {
+        $encomenda = Database::one('SELECT * FROM orders WHERE id = ? FOR UPDATE', [$orderId]);
+        if (!$encomenda) {
+            $pdo->rollBack();
+            flash('error', 'Encomenda não encontrada.');
+            redirect('/admin/encomendas');
+        }
+
+        $oldStatus = $encomenda['status'];
+        $itens = Database::all('SELECT * FROM order_items WHERE order_id = ?', [$orderId]);
+
+        if ($newStatus === 'cancelada' && $oldStatus !== 'cancelada') {
+            foreach ($itens as $it) {
+                $pdo->prepare('UPDATE products SET stock = stock + ? WHERE id = ?')
+                    ->execute([(int) $it['qty'], (int) $it['product_id']]);
+            }
+        } elseif ($oldStatus === 'cancelada' && $newStatus !== 'cancelada') {
+            $ids = array_map(fn($it) => (int) $it['product_id'], $itens);
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $rows = Database::all("SELECT * FROM products WHERE id IN ($placeholders) FOR UPDATE", $ids);
+            $byId = [];
+            foreach ($rows as $row) {
+                $byId[(int) $row['id']] = $row;
+            }
+            foreach ($itens as $it) {
+                $p = $byId[(int) $it['product_id']] ?? null;
+                if (!$p || (int) $p['stock'] < (int) $it['qty']) {
+                    $pdo->rollBack();
+                    flash('error', 'Não é possível reverter o cancelamento: já não há stock suficiente de "' . ($p['name'] ?? $it['product_name']) . '".');
+                    redirect('/admin/encomendas/' . $orderId);
+                }
+            }
+            foreach ($itens as $it) {
+                $pdo->prepare('UPDATE products SET stock = stock - ? WHERE id = ?')
+                    ->execute([(int) $it['qty'], (int) $it['product_id']]);
+            }
+        }
+
+        $pdo->prepare('UPDATE orders SET status = ? WHERE id = ?')->execute([$newStatus, $orderId]);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        logError('updateOrderStatus', $e);
+        flash('error', 'Não foi possível atualizar o estado da encomenda.');
+        redirect('/admin/encomendas/' . $orderId);
+    }
+
+    flash('success', 'Estado da encomenda atualizado.');
+    redirect('/admin/encomendas/' . $orderId);
 }
