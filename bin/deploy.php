@@ -55,6 +55,11 @@ $CFG = [
     // -- Primeiro login de gestão (criado só na 1ª vez) -----------------------
     'admin_user' => 'gerente',                        // <<< ALTERAR se quiser
     'admin_pass' => 'ALTERE_ESTA_PASSWORD',           // <<< ALTERAR (mín. 8)
+
+    // -- Email transacional (Brevo) — opcional, deixar vazio se ainda não usar -
+    'brevo_api_key' => '',                            // <<< ALTERAR (opcional)
+    'mail_from'      => 'loja@inforocasiao.pt',
+    'mail_from_name' => 'Inforocasião',
 ];
 // ============================================================================
 //  A partir daqui não é preciso mexer.
@@ -198,6 +203,11 @@ try {
             'charset' => 'utf8mb4',
         ],
         'app' => ['name' => 'Inforocasião', 'base_url' => '', 'env' => 'production'],
+        'mailer' => [
+            'brevo_api_key' => $CFG['brevo_api_key'] ?? '',
+            'from_email'    => $CFG['mail_from'] ?? 'loja@inforocasiao.pt',
+            'from_name'     => $CFG['mail_from_name'] ?? 'Inforocasião',
+        ],
     ];
     if (!is_dir($CFG['public_dir'] . '/config')) {
         mkdir($CFG['public_dir'] . '/config', 0755, true);

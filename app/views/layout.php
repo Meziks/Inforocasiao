@@ -101,6 +101,17 @@ $ogImage     = Seo::abs('assets/img/og-image.png');
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2Z"/></svg>
                 Contactos
             </a>
+            <?php if (CustomerAuth::check()): ?>
+                <a href="<?= e(url('/conta')) ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    A minha conta
+                </a>
+            <?php else: ?>
+                <a href="<?= e(url('/login')) ?>">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Entrar
+                </a>
+            <?php endif; ?>
         </nav>
     </div>
 </header>
@@ -140,7 +151,13 @@ $ogImage     = Seo::abs('assets/img/og-image.png');
         </div>
     </div>
     <div class="footer-bottom">
-        <div class="container">© <?= date('Y') ?> <?= e($appName) ?>. Todos os direitos reservados.</div>
+        <div class="container footer-bottom-inner">
+            <span>© <?= date('Y') ?> <?= e($appName) ?>. Todos os direitos reservados.</span>
+            <span class="footer-legal-links">
+                <a href="<?= e(url('/termos')) ?>">Termos de Utilização</a>
+                <a href="<?= e(url('/privacidade')) ?>">Política de Privacidade</a>
+            </span>
+        </div>
     </div>
 </footer>
 <!-- Botão flutuante de WhatsApp (contacto rápido) -->

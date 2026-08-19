@@ -128,6 +128,131 @@ try {
             render('contact', ['title' => 'Contactos']);
             break;
 
+        // ---------- Contas de cliente ----------
+        case $path === '/registo' && $method === 'GET':
+            if (CustomerAuth::check()) redirect('/conta');
+            seo(['canonical' => '/registo']);
+            render('auth/registo', ['title' => 'Criar conta']);
+            break;
+
+        case $path === '/registo' && $method === 'POST':
+            csrf_verify();
+            $name     = trim((string) ($_POST['name'] ?? ''));
+            $email    = strtolower(trim((string) ($_POST['email'] ?? '')));
+            $password = (string) ($_POST['password'] ?? '');
+            $phone    = trim((string) ($_POST['phone'] ?? '')) ?: null;
+
+            if ($name === '' || $email === '' || strlen($password) < 8) {
+                flash('error', 'Preencha o nome, email e uma password com pelo menos 8 caracteres.');
+                redirect('/registo');
+            }
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                flash('error', 'Introduza um email válido.');
+                redirect('/registo');
+            }
+
+            $id = CustomerAuth::register($name, $email, $password, $phone);
+            if ($id === null) {
+                flash('error', 'Já existe uma conta com este email. Experimente entrar em vez de criar conta nova.');
+                redirect('/registo');
+            }
+            flash('success', 'Conta criada com sucesso! Bem-vindo(a), ' . $name . '.');
+            redirect('/conta');
+            break;
+
+        case $path === '/login' && $method === 'GET':
+            if (CustomerAuth::check()) redirect('/conta');
+            seo(['canonical' => '/login']);
+            render('auth/login', ['title' => 'Entrar']);
+            break;
+
+        case $path === '/login' && $method === 'POST':
+            csrf_verify();
+            $email    = strtolower(trim((string) ($_POST['email'] ?? '')));
+            $password = (string) ($_POST['password'] ?? '');
+            if (CustomerAuth::attempt($email, $password)) {
+                redirect('/conta');
+            }
+            flash('error', 'Email ou password incorretos.');
+            redirect('/login');
+            break;
+
+        case $path === '/logout' && $method === 'POST':
+            csrf_verify();
+            CustomerAuth::logout();
+            redirect('/');
+            break;
+
+        case $path === '/conta' && $method === 'GET':
+            CustomerAuth::requireLogin();
+            render('account/index', ['cliente' => CustomerAuth::user(), 'title' => 'A minha conta']);
+            break;
+
+        case $path === '/recuperar-password' && $method === 'GET':
+            seo(['canonical' => '/recuperar-password']);
+            render('auth/recuperar', ['title' => 'Recuperar password']);
+            break;
+
+        case $path === '/recuperar-password' && $method === 'POST':
+            csrf_verify();
+            $email = strtolower(trim((string) ($_POST['email'] ?? '')));
+            if ($email !== '') {
+                $token = CustomerAuth::createPasswordReset($email);
+                if ($token !== null) {
+                    $link = Seo::abs('/redefinir-password/' . $token);
+                    Mailer::send(
+                        $email,
+                        '',
+                        'Recuperar a sua password — Inforocasião',
+                        '<p>Pediu para redefinir a password da sua conta na Inforocasião.</p>'
+                        . '<p><a href="' . e($link) . '">Clique aqui para definir uma nova password</a></p>'
+                        . '<p>Este link é válido durante 1 hora. Se não foi você a pedir isto, ignore este email.</p>'
+                    );
+                }
+            }
+            // Mensagem sempre igual, exista ou não conta com este email (não revelar quais emails têm conta).
+            flash('success', 'Se existir uma conta com esse email, enviámos um link para redefinir a password.');
+            redirect('/recuperar-password');
+            break;
+
+        case preg_match('#^/redefinir-password/([a-f0-9]{64})$#', $path, $m) === 1 && $method === 'GET':
+            $customerId = CustomerAuth::validatePasswordResetToken($m[1]);
+            if ($customerId === null) {
+                flash('error', 'Este link é inválido ou já expirou. Peça um novo.');
+                redirect('/recuperar-password');
+            }
+            seo(['canonical' => '/redefinir-password/' . $m[1]]);
+            render('auth/redefinir', ['token' => $m[1], 'title' => 'Nova password']);
+            break;
+
+        case preg_match('#^/redefinir-password/([a-f0-9]{64})$#', $path, $m) === 1 && $method === 'POST':
+            csrf_verify();
+            $customerId = CustomerAuth::validatePasswordResetToken($m[1]);
+            if ($customerId === null) {
+                flash('error', 'Este link é inválido ou já expirou. Peça um novo.');
+                redirect('/recuperar-password');
+            }
+            $password = (string) ($_POST['password'] ?? '');
+            if (strlen($password) < 8) {
+                flash('error', 'A password deve ter pelo menos 8 caracteres.');
+                redirect('/redefinir-password/' . $m[1]);
+            }
+            CustomerAuth::resetPassword($customerId, $password);
+            flash('success', 'Password alterada com sucesso. Já pode entrar.');
+            redirect('/login');
+            break;
+
+        // ---------- Páginas legais ----------
+        case $path === '/termos' && $method === 'GET':
+            seo(['canonical' => '/termos', 'description' => 'Termos de Utilização da Inforocasião.']);
+            render('legal/termos', ['title' => 'Termos de Utilização']);
+            break;
+
+        case $path === '/privacidade' && $method === 'GET':
+            seo(['canonical' => '/privacidade', 'description' => 'Política de Privacidade da Inforocasião.']);
+            render('legal/privacidade', ['title' => 'Política de Privacidade']);
+            break;
+
         // ---------- SEO: sitemap e robots ----------
         case $path === '/sitemap.xml' && $method === 'GET':
             header('Content-Type: application/xml; charset=utf-8');
@@ -151,7 +276,8 @@ try {
             header('Content-Type: text/plain; charset=utf-8');
             echo "User-agent: *\n";
             echo "Allow: /\n";
-            echo "Disallow: /admin\n\n";
+            echo "Disallow: /admin\n";
+            echo "Disallow: /v2\n\n";
             echo "Sitemap: " . Seo::abs('/sitemap.xml') . "\n";
             break;
 

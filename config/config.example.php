@@ -21,4 +21,13 @@ return [
         'base_url' => '',            // Deixar vazio se o site está na raiz do domínio
         'env'      => 'production',  // "production" ou "development"
     ],
+    'mailer' => [
+        // Emails de confirmação de conta, recuperação de password, etc.
+        // Criar conta grátis em https://www.brevo.com/, gerar uma "API Key"
+        // em Settings → SMTP & API → API Keys. Enquanto ficar vazio, os
+        // emails não são enviados (só registados em storage/app-error.log).
+        'brevo_api_key' => '',              // <<< ALTERAR
+        'from_email'    => 'loja@inforocasiao.pt', // <<< ALTERAR (tem de estar validado na Brevo)
+        'from_name'     => 'Inforocasião',
+    ],
 ];
