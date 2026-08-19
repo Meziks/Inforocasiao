@@ -1,3 +1,6 @@
--- Transferir a 3ª imagem (coluna image3) já existente para product_images.
-INSERT INTO product_images (product_id, image, sort_order)
-SELECT id, image3, 2 FROM products WHERE image3 IS NOT NULL AND image3 <> '';
+-- NOTA: mesma situação da 011, mas para a coluna legada "image3" — só
+-- existia em instalações antigas com dados legados e nunca é criada numa
+-- instalação nova (ver 009). Substituída por uma instrução inofensiva.
+-- Em produção já foi aplicada com sucesso antes desta alteração, por isso
+-- este ficheiro nunca volta a correr lá — só afeta instalações novas.
+ALTER TABLE products COMMENT = 'Inforocasiao - catalogo de produtos';
