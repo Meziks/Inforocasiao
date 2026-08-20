@@ -205,16 +205,37 @@
         render();
     })();
 
-    // Checkout: mostrar os campos de morada só quando "Envio" está escolhido
+    // Checkout: mostrar os campos de morada e recalcular os portes ao vivo
+    // consoante "Levantamento" ou "Envio" está escolhido.
     (function () {
         var form = document.querySelector(".checkout-form");
         if (!form) return;
         var shippingSection = document.getElementById("shipping-fields");
+        var summary = document.getElementById("checkout-summary");
+        var shippingEl = document.getElementById("summary-shipping");
+        var totalEl = document.getElementById("summary-total");
         var radios = form.querySelectorAll('input[name="fulfillment"]');
+
+        var subtotal      = summary ? parseFloat(summary.dataset.subtotal) : 0;
+        var flatFee       = summary ? parseFloat(summary.dataset.flatFee) : 0;
+        var freeThreshold = summary ? parseFloat(summary.dataset.freeThreshold) : 0;
+
+        function formatMoneyPt(value) {
+            var parts = value.toFixed(2).split(".");
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            return parts.join(",") + " €";
+        }
 
         function update() {
             var selected = form.querySelector('input[name="fulfillment"]:checked');
-            shippingSection.hidden = !(selected && selected.value === "envio");
+            var isEnvio = selected && selected.value === "envio";
+            shippingSection.hidden = !isEnvio;
+
+            if (shippingEl && totalEl) {
+                var shippingCost = isEnvio && subtotal < freeThreshold ? flatFee : 0;
+                shippingEl.textContent = shippingCost > 0 ? formatMoneyPt(shippingCost) : "Grátis";
+                totalEl.textContent = formatMoneyPt(subtotal + shippingCost);
+            }
         }
         radios.forEach(function (r) { r.addEventListener("change", update); });
         update();

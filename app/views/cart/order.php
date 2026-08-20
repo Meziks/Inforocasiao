@@ -39,6 +39,10 @@ $statusLabels = [
                 </li>
             <?php endforeach; ?>
         </ul>
+        <ul class="checkout-summary-list checkout-summary-breakdown">
+            <li><span>Subtotal</span><span><?= money($encomenda['subtotal']) ?></span></li>
+            <li><span>Portes</span><span><?= (float) $encomenda['shipping_cost'] > 0 ? money($encomenda['shipping_cost']) : 'Grátis' ?></span></li>
+        </ul>
         <div class="checkout-summary-total"><span>Total</span><span><?= money($encomenda['total']) ?></span></div>
         <p class="muted small">Pagamento no levantamento ou na entrega.</p>
     </div>

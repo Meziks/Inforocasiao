@@ -7,6 +7,10 @@ declare(strict_types=1);
 
 require __DIR__ . '/app/bootstrap.php';
 
+// --- Regras de portes (Fase 2) ------------------------------------------------
+const SHIPPING_FLAT_FEE       = 5.00;
+const SHIPPING_FREE_THRESHOLD = 150.00;
+
 // --- Determinar a rota a partir do URL --------------------------------------
 $uri  = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
 $base = rtrim($GLOBALS['config']['app']['base_url'] ?? '', '/');
@@ -297,9 +301,11 @@ try {
                 flash('error', 'O seu carrinho está vazio.');
                 redirect('/carrinho');
             }
+            $subtotal = Cart::total();
             seo(['canonical' => '/checkout']);
             render('cart/checkout', [
-                'itens' => $itens, 'total' => Cart::total(), 'cliente' => CustomerAuth::user(), 'title' => 'Checkout',
+                'itens' => $itens, 'subtotal' => $subtotal, 'cliente' => CustomerAuth::user(), 'title' => 'Checkout',
+                'shippingFlatFee' => SHIPPING_FLAT_FEE, 'shippingFreeThreshold' => SHIPPING_FREE_THRESHOLD,
             ]);
             break;
 
@@ -749,6 +755,15 @@ function handleImageUpload(array $file): ?string
     return $newName;
 }
 
+/** Calcula os portes: grátis no levantamento, e no envio grátis a partir do limite. */
+function calculateShipping(string $fulfillment, float $subtotal): float
+{
+    if ($fulfillment !== 'envio') {
+        return 0.0;
+    }
+    return $subtotal >= SHIPPING_FREE_THRESHOLD ? 0.0 : SHIPPING_FLAT_FEE;
+}
+
 /**
  * Processa o checkout: valida o formulário, reserva stock numa única
  * transação (com SELECT ... FOR UPDATE sobre todos os artigos do carrinho
@@ -800,7 +815,7 @@ function placeOrder(): void
         }
 
         $insufficient = [];
-        $total = 0.0;
+        $subtotal = 0.0;
         foreach ($itens as $item) {
             $pid     = (int) $item['product']['id'];
             $qty     = (int) $item['qty'];
@@ -809,7 +824,7 @@ function placeOrder(): void
                 $insufficient[] = $item['product']['name'];
                 continue;
             }
-            $total += (float) $current['price'] * $qty;
+            $subtotal += (float) $current['price'] * $qty;
         }
 
         if ($insufficient) {
@@ -828,11 +843,14 @@ function placeOrder(): void
             redirect('/carrinho');
         }
 
+        $shippingCost = calculateShipping($fulfillment, $subtotal);
+        $total = $subtotal + $shippingCost;
+
         $pdo->prepare(
-            'INSERT INTO orders (customer_id, status, fulfillment, shipping_name, shipping_address, shipping_postal, shipping_city, phone, notes, total)
-             VALUES (?, "pendente", ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO orders (customer_id, status, fulfillment, subtotal, shipping_cost, shipping_name, shipping_address, shipping_postal, shipping_city, phone, notes, total)
+             VALUES (?, "pendente", ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         )->execute([
-            $cliente['id'], $fulfillment,
+            $cliente['id'], $fulfillment, $subtotal, $shippingCost,
             $fulfillment === 'envio' ? $shippingName : null,
             $fulfillment === 'envio' ? $shippingAddress : null,
             $fulfillment === 'envio' ? $shippingPostal : null,
@@ -867,7 +885,8 @@ function placeOrder(): void
         $cliente['email'], $cliente['name'],
         'Confirmação da encomenda #' . $orderId . ' — Inforocasião',
         '<p>Olá ' . e($cliente['name']) . ',</p>'
-        . '<p>Recebemos a sua encomenda #' . $orderId . ', no valor de ' . e(money($total)) . '.</p>'
+        . '<p>Recebemos a sua encomenda #' . $orderId . ', no valor de ' . e(money($total))
+        . ($shippingCost > 0 ? ' (incluindo ' . e(money($shippingCost)) . ' de portes)' : '') . '.</p>'
         . '<p>' . ($fulfillment === 'levantamento'
             ? 'Vamos avisá-lo(a) assim que estiver pronta para levantamento na loja.'
             : 'Vamos avisá-lo(a) assim que for enviada.') . '</p>'

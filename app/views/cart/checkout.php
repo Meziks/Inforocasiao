@@ -12,7 +12,7 @@
                 <h3 class="form-section-title">Entrega</h3>
                 <div class="form-checks">
                     <label class="check"><input type="radio" name="fulfillment" value="levantamento" checked> Levantamento na loja (Cucujães) — grátis</label>
-                    <label class="check"><input type="radio" name="fulfillment" value="envio"> Envio para morada — Portugal continental</label>
+                    <label class="check"><input type="radio" name="fulfillment" value="envio"> Envio para morada — Portugal continental (<?= money($shippingFlatFee) ?>, grátis a partir de <?= money($shippingFreeThreshold) ?>)</label>
                 </div>
             </div>
             <div class="form-section" id="shipping-fields">
@@ -47,7 +47,8 @@
             </div>
         </form>
 
-        <aside class="checkout-summary card">
+        <aside class="checkout-summary card" id="checkout-summary"
+               data-subtotal="<?= (float) $subtotal ?>" data-flat-fee="<?= (float) $shippingFlatFee ?>" data-free-threshold="<?= (float) $shippingFreeThreshold ?>">
             <h3 class="form-section-title">Resumo</h3>
             <ul class="checkout-summary-list">
                 <?php foreach ($itens as $item): ?>
@@ -57,7 +58,11 @@
                     </li>
                 <?php endforeach; ?>
             </ul>
-            <div class="checkout-summary-total"><span>Total</span><span><?= money($total) ?></span></div>
+            <ul class="checkout-summary-list checkout-summary-breakdown">
+                <li><span>Subtotal</span><span id="summary-subtotal"><?= money($subtotal) ?></span></li>
+                <li><span>Portes</span><span id="summary-shipping">Grátis</span></li>
+            </ul>
+            <div class="checkout-summary-total"><span>Total</span><span id="summary-total"><?= money($subtotal) ?></span></div>
             <p class="muted small">Pagamento no levantamento ou na entrega — ainda não há pagamento online.</p>
         </aside>
     </div>
